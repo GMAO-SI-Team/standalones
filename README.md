@@ -2,7 +2,7 @@
 
 ## Building
 
-To build you must have CMake, GNU Make (or Ninja), and a Fortran compiler
+To build you must have CMake, GNU Make (or Ninja), Fortran compiler, and an MPI stack
 
 The steps to build are:
 
