@@ -1,4 +1,4 @@
-# tp-core-driver
+# Standalones for tp-core and cloud microphysics
 
 ## Building
 

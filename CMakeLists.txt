@@ -26,5 +26,5 @@ include (esma_check_install_prefix)
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/compiler)
 include (esma_compiler)
 
-add_subdirectory (tp-core-driver)
-add_subdirectory (microphys-sa)
+add_subdirectory (tp-core-sa)
+add_subdirectory (cloud-microphys-sa)
