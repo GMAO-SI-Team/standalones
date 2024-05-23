@@ -3,7 +3,7 @@ cmake_policy (SET CMP0053 NEW)
 cmake_policy (SET CMP0054 NEW)
 
 project (
-  tp-core-driver
+  standalones
   VERSION 1.0.0
   LANGUAGES Fortran)
 
@@ -26,16 +26,5 @@ include (esma_check_install_prefix)
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/compiler)
 include (esma_compiler)
 
-set(srcs
-  src/tp_core.F90
-  stubs/fv_mp_mod_stub.F90
-  stubs/fv_grid_utils_stub.F90
-  stubs/fv_arrays_stub.F90
-  input/input_arrays.f90
-  output/output_arrays.f90
-  driver_cpu.f90
-  main.f90)
-
-add_executable(tp-core-driver ${srcs})
-install(TARGETS tp-core-driver DESTINATION bin)
-
+add_subdirectory (tp-core-driver)
+add_subdirectory (microphys-sa)
