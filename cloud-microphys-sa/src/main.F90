@@ -20,7 +20,7 @@ contains
     use input_mod, only: InputScalars_T, InputArrays_T, get_data_from_file
     use input_mod, only: write_inout_difference => write_difference
     use output_mod, only: OutputArrays_T, write_output_difference => write_difference
-    use gfdl2_cloud_microphys_mod, only: gfdl_cloud_microphys_init, gfdl_cloud_microphys_driver
+    ! use gfdl2_cloud_microphys_mod, only: gfdl_cloud_microphys_init, gfdl_cloud_microphys_driver
     use gfdl2_cloud_microphys_cpu_mod, only: gfdl_cloud_microphys_cpu_init => gfdl_cloud_microphys_init
     use gfdl2_cloud_microphys_cpu_mod, only: gfdl_cloud_microphys_cpu_driver => gfdl_cloud_microphys_driver
 
@@ -86,68 +86,68 @@ contains
     cpu_time_ = finish - start
     ! call outarr1%write_arrays()
 
-    ! GPU run
+    ! ! GPU run
 
-    ! Read data
-    call get_data_from_file(file_name, sclr2, inarr2)
-    ! print *, ''
-    ! print *, 'GPU:'
-    ! call sclr2%write_scalars()
-    ! call inarr2%write_arrays()
-    outarr2 = OutputArrays_T(sclr2%iis, sclr2%iie, sclr2%jjs, sclr2%jje, sclr2%kks, sclr2%kke)
+    ! ! Read data
+    ! call get_data_from_file(file_name, sclr2, inarr2)
+    ! ! print *, ''
+    ! ! print *, 'GPU:'
+    ! ! call sclr2%write_scalars()
+    ! ! call inarr2%write_arrays()
+    ! outarr2 = OutputArrays_T(sclr2%iis, sclr2%iie, sclr2%jjs, sclr2%jje, sclr2%kks, sclr2%kke)
 
-    call gfdl_cloud_microphys_init()
+    ! call gfdl_cloud_microphys_init()
 
-    do j = 1, num_gpu_runs
-       call cpu_time(start)
-       call gfdl_cloud_microphys_driver ( &
-            ! intent (in)
-            inarr2%qv, inarr2%ql, inarr2%qr, &
-            ! intent (inout)
-            inarr2%qi, inarr2%qs, &
-            ! intent (in)
-            inarr2%qg, inarr2%qa, inarr2%qn, &
-            ! intent (inout)
-            inarr2%qv_dt, inarr2%ql_dt, inarr2%qr_dt, inarr2%qi_dt, &
-            inarr2%qs_dt, inarr2%qg_dt, inarr2%qa_dt, inarr2%pt_dt, &
-            ! intent (in)
-            inarr2%pt, &
-            ! intent (inout)
-            inarr2%w, &
-            ! intent (in)
-            inarr2%uin, inarr2%vin, &
-            ! intent (inout)
-            inarr2%udt, inarr2%vdt, &
-            ! intent (in)
-            inarr2%dz, inarr2%delp, inarr2%area, sclr2%dt_in, inarr2%land, inarr2%cnv_fraction, &
-            inarr2%srf_type, inarr2%eis, inarr2%rhcrit, sclr2%anv_icefall, sclr2%lsc_icefall, &
-            ! intent (out)
-            outarr2%revap, outarr2%isubl, &
-            outarr2%rain, outarr2%snow, outarr2%ice, outarr2%graupel, &
-            outarr2%m2_rain, outarr2%m2_sol, &
-            ! intent (in)
-            sclr2%hydrostatic, sclr2%phys_hydrostatic, &
-            sclr2%iis, sclr2%iie, sclr2%jjs, sclr2%jje, sclr2%kks, sclr2%kke, sclr2%ktop, sclr2%kbot)
-       call cpu_time(finish)
-       gpu_time_(j) = finish - start
-       ! call outarr2%write_arrays()
-    end do
+    ! do j = 1, num_gpu_runs
+    !    call cpu_time(start)
+    !    call gfdl_cloud_microphys_driver ( &
+    !         ! intent (in)
+    !         inarr2%qv, inarr2%ql, inarr2%qr, &
+    !         ! intent (inout)
+    !         inarr2%qi, inarr2%qs, &
+    !         ! intent (in)
+    !         inarr2%qg, inarr2%qa, inarr2%qn, &
+    !         ! intent (inout)
+    !         inarr2%qv_dt, inarr2%ql_dt, inarr2%qr_dt, inarr2%qi_dt, &
+    !         inarr2%qs_dt, inarr2%qg_dt, inarr2%qa_dt, inarr2%pt_dt, &
+    !         ! intent (in)
+    !         inarr2%pt, &
+    !         ! intent (inout)
+    !         inarr2%w, &
+    !         ! intent (in)
+    !         inarr2%uin, inarr2%vin, &
+    !         ! intent (inout)
+    !         inarr2%udt, inarr2%vdt, &
+    !         ! intent (in)
+    !         inarr2%dz, inarr2%delp, inarr2%area, sclr2%dt_in, inarr2%land, inarr2%cnv_fraction, &
+    !         inarr2%srf_type, inarr2%eis, inarr2%rhcrit, sclr2%anv_icefall, sclr2%lsc_icefall, &
+    !         ! intent (out)
+    !         outarr2%revap, outarr2%isubl, &
+    !         outarr2%rain, outarr2%snow, outarr2%ice, outarr2%graupel, &
+    !         outarr2%m2_rain, outarr2%m2_sol, &
+    !         ! intent (in)
+    !         sclr2%hydrostatic, sclr2%phys_hydrostatic, &
+    !         sclr2%iis, sclr2%iie, sclr2%jjs, sclr2%jje, sclr2%kks, sclr2%kke, sclr2%ktop, sclr2%kbot)
+    !    call cpu_time(finish)
+    !    gpu_time_(j) = finish - start
+    !    ! call outarr2%write_arrays()
+    ! end do
 
-    call MPI_Comm_size(MPI_COMM_WORLD, nranks, mpi_err)
-    call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
-    do i = 0, nranks-1
-       if (i == irank) then
-          write(*, *)
-          write(*, fmt) '[', irank, ']', 'Time taken (cpu):', cpu_time_, 's'
-          do j = 1, num_gpu_runs
-             write(*, fmt) '[', irank, ']', 'Time taken (gpu):', gpu_time_(j), 's'
-          end do
-          ! Write errors to stdout
-          call write_inout_difference(inarr1, inarr2)
-          call write_output_difference(outarr1, outarr2)
-       end if
-       call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
-    end do
+    ! call MPI_Comm_size(MPI_COMM_WORLD, nranks, mpi_err)
+    ! call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
+    ! do i = 0, nranks-1
+    !    if (i == irank) then
+    !       write(*, *)
+    !       write(*, fmt) '[', irank, ']', 'Time taken (cpu):', cpu_time_, 's'
+    !       do j = 1, num_gpu_runs
+    !          write(*, fmt) '[', irank, ']', 'Time taken (gpu):', gpu_time_(j), 's'
+    !       end do
+    !       ! Write errors to stdout
+    !       call write_inout_difference(inarr1, inarr2)
+    !       call write_output_difference(outarr1, outarr2)
+    !    end if
+    !    call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
+    ! end do
 
   end subroutine serial_driver
 

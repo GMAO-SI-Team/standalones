@@ -3,7 +3,7 @@ find_package(MPI REQUIRED COMPONENTS Fortran)
 set(srcs
   src/input.F90 
   src/output.F90
-  src/gfdl_cloud_microphys.F90
+  # src/gfdl_cloud_microphys.F90
   src/gfdl_cloud_microphys_cpu.F90
   src/main.F90
   )

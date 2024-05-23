@@ -35,7 +35,7 @@ set (GEOS_Fortran_Debug_FPE_Flags "${common_Fortran_fpe_flags}")
 
 # GEOS Release
 # ------------
-set (GEOS_Fortran_Release_Flags "-fast -Kieee -g")
+set (GEOS_Fortran_Release_Flags "-O1 -g -Kieee ${TRACEBACK}")
 set (GEOS_Fortran_Release_FPE_Flags "${common_Fortran_fpe_flags}")
 
 # NOTE: No idea how to handle GPU with CMake
