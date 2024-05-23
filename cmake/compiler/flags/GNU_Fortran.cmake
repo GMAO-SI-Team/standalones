@@ -55,19 +55,19 @@ if (CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
   # First for the argument mismatch
   option(MISMATCH_IS_ERROR "Argument mismatches are errors, not warnings" OFF)
   if (NOT MISMATCH_IS_ERROR)
-    ecbuild_warn (
+    message (WARNING
       "Argument mismatches will be treated as *warnings* and not *errors*. "
-      "Per the gfortran 10 man page:\n"
-      "Some code contains calls to external procedures which \n"
-      "mismatches between the calls and the procedure definition, \n"
-      "or with mismatches between different calls.  Such code is \n"
-      "non-conforming, and will usually be flagged wi1th an error. \n"
-      "This options degrades the error to a warning, which can \n"
-      "only be disabled by disabling all warnings vial -w.  Only a \n"
-      "single occurrence per argument is flagged by this warning. \n"
-      "-fallow-argument-mismatch is implied by -std=legacy.\n"
-      "Using this option is *strongly* discouraged.  It is possible to \n"
-      "provide standard-conforming code which allows different types \n"
+      "Per the gfortran 10 man page:"
+      "Some code contains calls to external procedures which "
+      "mismatches between the calls and the procedure definition, "
+      "or with mismatches between different calls.  Such code is "
+      "non-conforming, and will usually be flagged wi1th an error. "
+      "This options degrades the error to a warning, which can "
+      "only be disabled by disabling all warnings vial -w.  Only a "
+      "single occurrence per argument is flagged by this warning. "
+      "-fallow-argument-mismatch is implied by -std=legacy."
+      "Using this option is *strongly* discouraged.  It is possible to "
+      "provide standard-conforming code which allows different types "
       "of arguments by using an explicit interface and TYPE(*).")
     set (MISMATCH "-fallow-argument-mismatch")
   endif ()
@@ -75,16 +75,16 @@ if (CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
   # Then for BOZ constants
   option(INVALID_BOZ_IS_ERROR "Use of invalid BOZ constants are errors, not warnings" OFF)
   if (NOT INVALID_BOZ_IS_ERROR)
-    ecbuild_warn(
+    message(WARNING
       "Invalid use of BOZ literal constants will be treated as *warnings* and not as *errors*. "
-      "Per the GCC 10 release notes:\n"
-      "The handling of a BOZ literal constant has been reworked \n"
-      "to provide better conformance to the Fortran 2008 and 2018 \n"
-      "standards. In these Fortran standards, a BOZ literal constant is a \n"
-      "typeless and kindless entity. As a part of the rework, documented \n"
-      "and undocumented extensions to the Fortran standard now emit \n"
-      "errors during compilation. Some of these extensions are permitted \n"
-      "with the -fallow-invalid-boz, where the error is degraded to a \n"
+      "Per the GCC 10 release notes:"
+      "The handling of a BOZ literal constant has been reworked "
+      "to provide better conformance to the Fortran 2008 and 2018 "
+      "standards. In these Fortran standards, a BOZ literal constant is a "
+      "typeless and kindless entity. As a part of the rework, documented "
+      "and undocumented extensions to the Fortran standard now emit "
+      "errors during compilation. Some of these extensions are permitted "
+      "with the -fallow-invalid-boz, where the error is degraded to a "
       "warning and the code is compiled as with older gfortran.")
     set (ALLOW_BOZ "-fallow-invalid-boz")
   endif ()
