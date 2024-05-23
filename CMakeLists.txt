@@ -21,8 +21,9 @@ if (NOT CMAKE_BUILD_TYPE)
     "Debug" "Release" "Aggressive")
 endif ()
 
+list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/support)
+include (esma_check_install_prefix)
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/compiler)
-
 include (esma_compiler)
 
 set(srcs
