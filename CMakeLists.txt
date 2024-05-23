@@ -5,7 +5,7 @@ cmake_policy (SET CMP0054 NEW)
 project (
   tp-core-driver
   VERSION 1.0.0
-  LANGUAGES Fortran CXX C)  # Note - CXX is required for ESMF
+  LANGUAGES Fortran)
 
 if ("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
    message(SEND_ERROR "In-source builds are disabled. Please
