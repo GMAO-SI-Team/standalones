@@ -28,14 +28,24 @@ set(CMAKE_EXE_LINKER_FLAGS "-c++libs -tp=px" CACHE INTERNAL "" FORCE)
 set (common_Fortran_flags "${BACKSLASH_STRING}")
 set (common_Fortran_fpe_flags "-tp=px")
 
+# GPU offloading via OpenMP
+# -------------------------
+set (GEOS_Fortran_OpenMP_GPU_Flags "-mp=gpu -gpu=cc80")
+
 # GEOS Debug
 # ----------
-set (GEOS_Fortran_Debug_Flags "-g -O0 -mp=gpu -gpu=cc80 -Kieee -Minfo=all -Mbounds ${TRACEBACK} -Mchkstk -Mdepchk")
+set (GEOS_Fortran_Debug_Flags "-g -O0 -Kieee -Minfo=all -Mbounds ${TRACEBACK} -Mchkstk -Mdepchk")
+if (GPU_BUILD)
+  set (GEOS_Fortran_Debug_Flags "${GEOS_Fortran_Debug_Flags} ${GEOS_Fortran_OpenMP_GPU_Flags}")
+endif ()
 set (GEOS_Fortran_Debug_FPE_Flags "${common_Fortran_fpe_flags}")
 
 # GEOS Release
 # ------------
-set (GEOS_Fortran_Release_Flags "-g -fast -mp=gpu -gpu=cc80 -Kieee")
+set (GEOS_Fortran_Release_Flags "-g -fast -Kieee")
+if (GPU_BUILD)
+  set (GEOS_Fortran_Release_Flags "${GEOS_Fortran_Release_Flags} ${GEOS_Fortran_OpenMP_GPU_Flags}")
+endif ()
 set (GEOS_Fortran_Release_FPE_Flags "${common_Fortran_fpe_flags}")
 
 # NOTE: No idea how to handle GPU with CMake
