@@ -4,6 +4,10 @@
 
 To build you must have CMake, GNU Make (or Ninja), Fortran compiler, and an MPI stack
 
+> [!NOTE]
+> On Discover, one can
+> `module load cmake comp/nvhpc/22.3`
+
 The steps to build are:
 
 ```
