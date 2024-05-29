@@ -21,21 +21,21 @@ set (TRACEBACK "-traceback")
 add_definitions(-D__PGI) # Needed for LANL CICE
 add_definitions(-D__PGI) # Needed for LANL CICE
 
-set(CMAKE_EXE_LINKER_FLAGS "-pgc++libs -tp=px-64" CACHE INTERNAL "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS "-c++libs -tp=px" CACHE INTERNAL "" FORCE)
 
 # Common Fortran Flags
 # --------------------
 set (common_Fortran_flags "${BACKSLASH_STRING}")
-set (common_Fortran_fpe_flags "-Ktrap=fp -tp=px-64")
+set (common_Fortran_fpe_flags "-tp=px")
 
 # GEOS Debug
 # ----------
-set (GEOS_Fortran_Debug_Flags "-O0 -g -Kieee -Minfo=all -Mbounds ${TRACEBACK} -Mchkstk -Mdepchk")
+set (GEOS_Fortran_Debug_Flags "-g -O0 -mp=gpu -gpu=cc80 -Kieee -Minfo=all -Mbounds ${TRACEBACK} -Mchkstk -Mdepchk")
 set (GEOS_Fortran_Debug_FPE_Flags "${common_Fortran_fpe_flags}")
 
 # GEOS Release
 # ------------
-set (GEOS_Fortran_Release_Flags "-O1 -g -Kieee ${TRACEBACK}")
+set (GEOS_Fortran_Release_Flags "-g -fast -mp=gpu -gpu=cc80 -Kieee")
 set (GEOS_Fortran_Release_FPE_Flags "${common_Fortran_fpe_flags}")
 
 # NOTE: No idea how to handle GPU with CMake
