@@ -22,3 +22,6 @@ To use a particular set (C360, np72), try
 ln -s /discover/nobackup/pchakrab/input/microphys-driver/C360/np72 input-data
 ```
 
+#### Comparing CPU and GPU run times
+
+TODO
