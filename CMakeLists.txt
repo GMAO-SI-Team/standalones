@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 3.17)
 cmake_policy (SET CMP0053 NEW)
 cmake_policy (SET CMP0054 NEW)
 
+option(GPU_BUILD "Build to run on GPUs")
 project (
   standalones
   VERSION 1.0.0

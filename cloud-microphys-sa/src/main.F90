@@ -2,7 +2,9 @@ program main
 
   use mpi
   use MicrophysicsSerialDriverCPU, only: serial_driver_cpu => serial_driver
+#ifdef GPU_BUILD
   use MicrophysicsSerialDriverGPU, only: serial_driver_gpu => serial_driver
+#endif
   use input_mod, only: InputScalars_T, InputArrays_T, get_data_from_file
   use output_mod, only: OutputArrays_T, write_output_difference => write_difference
 
@@ -34,6 +36,7 @@ program main
   call serial_driver_cpu(irank, sclr, inarr, outarr1, cpu_time_)
   call outarr1%write_arrays()
 
+#ifdef GPU_BUILD
   ! GPU run
   print *, 'GPU run'
   call serial_driver_gpu(irank, NUM_GPU_RUNS, sclr, inarr, outarr2, gpu_time_)
@@ -52,6 +55,7 @@ program main
      end if
      call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
   end do
+#endif
 
   call MPI_Finalize(mpi_err)
 
