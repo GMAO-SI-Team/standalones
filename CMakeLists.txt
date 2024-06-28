@@ -3,6 +3,12 @@ cmake_policy (SET CMP0053 NEW)
 cmake_policy (SET CMP0054 NEW)
 
 option(GPU_BUILD "Build to run on GPUs")
+
+#find_package(MPI REQUIRED)
+#set(CMAKE_Fortran_COMPILER nvfortran)
+#set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -acc")
+#include_directories(${MPI_Fortran_INCLUDE_PATH})
+
 project (
   standalones
   VERSION 1.0.0
@@ -23,9 +29,9 @@ if (NOT CMAKE_BUILD_TYPE)
 endif ()
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/support)
-include (esma_check_install_prefix)
+#include (esma_check_install_prefix)
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/compiler)
-include (esma_compiler)
+#include (esma_compiler)
 
 add_subdirectory (tp-core-sa)
 add_subdirectory (cloud-microphys-sa)

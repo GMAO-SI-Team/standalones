@@ -24,4 +24,5 @@ ln -s /discover/nobackup/pchakrab/input/microphys-driver/C360/np72 input-data
 
 #### Comparing CPU and GPU run times
 
-TODO
+Ensure that the CPU and GPU are doing the same/similar amount of work for the sake of comparisons. In the case where there are more CPU nodes or cores than GPU's, consider scaling results or inputs accordingly.
+

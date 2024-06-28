@@ -4,6 +4,7 @@ program main
   use MicrophysicsSerialDriverCPU, only: serial_driver_cpu => serial_driver
 #ifdef GPU_BUILD
   use MicrophysicsSerialDriverGPU, only: serial_driver_gpu => serial_driver
+  use MicrophysicsSerialDriverDOC, only: serial_driver_doc => serial_driver
 #endif
   use input_mod, only: InputScalars_T, InputArrays_T, get_data_from_file
   use output_mod, only: OutputArrays_T, write_output_difference => write_difference
@@ -14,10 +15,10 @@ program main
   integer :: irank, nranks, mpi_err, i, j
   type(InputScalars_T) :: sclr
   type(InputArrays_T) :: inarr
-  type(OutputArrays_T) :: outarr1, outarr2
+  type(OutputArrays_T) :: outarr1, outarr2, outarr3
   character(len=256) :: file_name
   character(len=*), parameter :: fmt = '(1x, a1, i2, a1, 1x, a, f11.7, 1x, a1)'
-  real :: cpu_time_, gpu_time_(NUM_GPU_RUNS)
+  real :: cpu_time_, gpu_time_(NUM_GPU_RUNS), doc_time_(NUM_GPU_RUNS)
 
   call MPI_Init(mpi_err)
   call MPI_Comm_rank(MPI_COMM_WORLD, irank, mpi_err)
@@ -37,13 +38,19 @@ program main
   call outarr1%write_arrays()
 
 #ifdef GPU_BUILD
+
+  print *, "Done with CPU"
+
   ! GPU run
   print *, 'GPU run'
   call serial_driver_gpu(irank, NUM_GPU_RUNS, sclr, inarr, outarr2, gpu_time_)
   call outarr2%write_arrays()
 
-  ! Write output differences to stdout
+  ! Hold for all to finish
   call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
+
+  print *, "Done with GPU"
+  ! Write output differences to stdout
   do i = 0, nranks-1
      if (i == irank) then
         write(*, *)
@@ -52,6 +59,27 @@ program main
            write(*, fmt) '[', irank, ']', 'Time taken (gpu):', gpu_time_(j), 's'
         end do
         call write_output_difference(outarr1, outarr2)
+     end if
+     call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
+  end do
+
+  ! DO CONCURRENT GPU Run
+  call serial_driver_doc(irank, NUM_GPU_RUNS, sclr, inarr, outarr3, doc_time_)
+  call outarr3%write_arrays()
+
+  ! Hold for all to finish
+  call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
+
+  print *, "Done with DOC"
+
+  ! Write output differences to stdout
+  do i = 0, nranks-1
+     if (i == irank) then
+        write(*, *)
+        do j = 1, NUM_GPU_RUNS
+           write(*, fmt) '[', irank, ']', 'Time taken (doc):', doc_time_(j), 's'
+        end do
+        call write_output_difference(outarr1, outarr3)
      end if
      call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
   end do

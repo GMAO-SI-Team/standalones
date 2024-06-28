@@ -9,5 +9,6 @@ set(srcs
   src/main.f90)
 
 add_executable(tp_core_driver.x ${srcs})
+# target_link_libraries(tp_core_driver.x ${MPI_Fortran_Libraries})
 install(TARGETS tp_core_driver.x DESTINATION bin)
 
