@@ -4,15 +4,17 @@ cmake_policy (SET CMP0054 NEW)
 
 option(GPU_BUILD "Build to run on GPUs")
 
-#find_package(MPI REQUIRED)
-#set(CMAKE_Fortran_COMPILER nvfortran)
-#set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -acc")
-#include_directories(${MPI_Fortran_INCLUDE_PATH})
-
 project (
   standalones
   VERSION 1.0.0
   LANGUAGES Fortran)
+
+enable_language(Fortran)
+
+find_package(MPI REQUIRED COMPONENTS Fortran)
+set(CMAKE_Fortran_COMPILER nvfortran)
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
+include_directories(${MPI_Fortran_INCLUDE_PATH})
 
 if ("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
    message(SEND_ERROR "In-source builds are disabled. Please
