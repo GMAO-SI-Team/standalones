@@ -165,15 +165,11 @@ contains
 
    call yppm(fy2, q, cry, ord_in, isd,ied,isd,ied, js,je,jsd,jed, npx,npy, gridstruct%dya, gridstruct%nested, gridstruct%grid_type, lim_fac)
 
-   do j=js,je+1
-      do i=isd,ied
-         fyy(i,j) = yfx(i,j) * fy2(i,j)
-      enddo
+   do concurrent (j=js:je+1,i=isd:ied)
+      fyy(i,j) = yfx(i,j) * fy2(i,j)
    enddo
-   do j=js,je
-      do i=isd,ied
-         q_i(i,j) = (q(i,j)*gridstruct%area(i,j) + fyy(i,j)-fyy(i,j+1))/ra_y(i,j)
-      enddo
+   do concurrent (j=js:je,i=isd:ied)
+      q_i(i,j) = (q(i,j)*gridstruct%area(i,j) + fyy(i,j)-fyy(i,j+1))/ra_y(i,j)
    enddo
 
    call xppm(fx, q_i, crx(is,js), ord_ou, is,ie,isd,ied, js,je,jsd,jed, npx,npy, gridstruct%dxa, gridstruct%nested, gridstruct%grid_type, lim_fac)
@@ -184,10 +180,10 @@ contains
   call xppm(fx2, q, crx, ord_in, is,ie,isd,ied, jsd,jed,jsd,jed, npx,npy, gridstruct%dxa, gridstruct%nested, gridstruct%grid_type, lim_fac)
 
    do j=jsd,jed
-      do i=is,ie+1
+      do concurrent (i=is:ie+1)
          fx1(i) =  xfx(i,j) * fx2(i,j)
       enddo
-      do i=is,ie
+      do concurrent (i=is:ie)
          q_j(i,j) = (q(i,j)*gridstruct%area(i,j) + fx1(i)-fx1(i+1))/ra_x(i,j)
       enddo
    enddo
@@ -202,15 +198,11 @@ contains
 !---------------------------------
 ! For transport of pt and tracers
 !---------------------------------
-      do j=js,je
-         do i=is,ie+1
-            fx(i,j) = 0.5*(fx(i,j) + fx2(i,j)) * mfx(i,j)
-         enddo
+      do concurrent (j=js:je,i=is:ie+1)
+         fx(i,j) = 0.5*(fx(i,j) + fx2(i,j)) * mfx(i,j)
       enddo
-      do j=js,je+1
-         do i=is,ie
-            fy(i,j) = 0.5*(fy(i,j) + fy2(i,j)) * mfy(i,j)
-         enddo
+      do concurrent (j=js:je+1,i=is:ie)
+         fy(i,j) = 0.5*(fy(i,j) + fy2(i,j)) * mfy(i,j)
       enddo
       if ( present(nord) .and. present(damp_c) .and. present(mass) ) then
         if ( damp_c > 1.e-4 ) then
@@ -222,15 +214,11 @@ contains
 !---------------------------------
 ! For transport of delp, vorticity
 !---------------------------------
-      do j=js,je
-         do i=is,ie+1
-            fx(i,j) = 0.5*(fx(i,j) + fx2(i,j)) * xfx(i,j)
-         enddo
+      do concurrent (j=js:je,i=is:ie+1)
+         fx(i,j) = 0.5*(fx(i,j) + fx2(i,j)) * xfx(i,j)
       enddo
-      do j=js,je+1
-         do i=is,ie
-            fy(i,j) = 0.5*(fy(i,j) + fy2(i,j)) * yfx(i,j)
-         enddo
+      do concurrent (j=js:je+1,i=is:ie)
+         fy(i,j) = 0.5*(fy(i,j) + fy2(i,j)) * yfx(i,j)
       enddo
       if ( present(nord) .and. present(damp_c) ) then
            if ( damp_c > 1.E-4 ) then
@@ -358,7 +346,7 @@ contains
 
  do 666 j=jfirst,jlast
 
-    do i=isd, ied
+    do concurrent (i=isd: ied)
        q1(i) = q(i,j)
     enddo
 
@@ -366,7 +354,7 @@ contains
 ! ord = 2: perfectly linear ppm scheme
 ! Diffusivity: ord2 < ord5 < ord3 < ord4 < ord6
 
-   do i=is1, ie3
+   do concurrent (i=is1:ie3)
       al(i) = p1*(q1(i-1)+q1(i)) + p2*(q1(i-2)+q1(i+1))
    enddo
 
@@ -386,20 +374,20 @@ contains
    endif
 
    if ( iord<0 ) then
-       do i=is-1, ie+2
+       do concurrent (i=is-1: ie+2)
           al(i) = max(0., al(i))
        enddo
    endif
 
    if ( mord==1 ) then  ! perfectly linear scheme
-        do i=is-1,ie+1
+        do concurrent (i=is-1:ie+1)
            bl(i) = al(i)   - q1(i)
            br(i) = al(i+1) - q1(i)
            b0(i) = bl(i) + br(i)
            smt5(i) = abs(lim_fac*b0(i)) < abs(bl(i)-br(i))
         enddo
 !DEC$ VECTOR ALWAYS
-      do i=is,ie+1
+      do concurrent (i=is:ie+1)
          if ( c(i,j) > 0. ) then
              fx1(i) = (1.-c(i,j))*(br(i-1) - c(i,j)*b0(i-1))
              flux(i,j) = q1(i-1)
@@ -413,7 +401,7 @@ contains
    elseif ( mord==2 ) then  ! perfectly linear scheme
 
 !DEC$ VECTOR ALWAYS
-      do i=is,ie+1
+      do concurrent (i=is:ie+1)
          xt = c(i,j)
          if ( xt > 0. ) then
               qtmp = q1(i-1)
@@ -430,16 +418,16 @@ contains
 
    elseif ( mord==3 ) then
 
-        do i=is-1,ie+1
-           bl(i) = al(i)   - q1(i)
-           br(i) = al(i+1) - q1(i)
-           b0(i) = bl(i) + br(i)
-              x0 = abs(b0(i))
-              xt = abs(bl(i)-br(i))
+        do concurrent (i=is-1:ie+1)
+             bl(i) = al(i)   - q1(i)
+             br(i) = al(i+1) - q1(i)
+             b0(i) = bl(i) + br(i)
+                x0 = abs(b0(i))
+                xt = abs(bl(i)-br(i))
            smt5(i) =    x0 < xt
            smt6(i) = 3.*x0 < xt
         enddo
-        do i=is,ie+1
+        do concurrent (i=is:ie+1)
            xt1(i) = c(i,j)
            if ( xt1(i) > 0. ) then
                if ( smt5(i-1) .or. smt6(i) ) then
@@ -458,23 +446,23 @@ contains
 
    elseif ( mord==4 ) then
 
-        do i=is-1,ie+1
-           bl(i) = al(i)   - q1(i)
-           br(i) = al(i+1) - q1(i)
-           b0(i) = bl(i) + br(i)
-              x0 = abs(b0(i))
-              xt = abs(bl(i)-br(i))
+        do concurrent (i=is-1:ie+1)
+             bl(i) = al(i)   - q1(i)
+             br(i) = al(i+1) - q1(i)
+             b0(i) = bl(i) + br(i)
+                x0 = abs(b0(i))
+                xt = abs(bl(i)-br(i))
            smt5(i) =    x0 < xt
            smt6(i) = 3.*x0 < xt
         enddo
-        do i=is,ie+1
+        do concurrent (i=is:ie+1)
            xt1(i) = c(i,j)
            hi5(i) = smt5(i-1) .and. smt5(i)   ! more diffusive
            hi6(i) = smt6(i-1) .or.  smt6(i)
            hi5(i) = hi5(i) .or. hi6(i)
         enddo
 !DEC$ VECTOR ALWAYS
-        do i=is,ie+1
+        do concurrent (i=is:ie+1)
           if ( xt1(i) > 0. ) then
                fx1(i) = (1.-xt1(i))*(br(i-1) - xt1(i)*b0(i-1))
                flux(i,j) = q1(i-1)
@@ -488,14 +476,14 @@ contains
    else
 
       if ( iord==5 ) then
-        do i=is-1,ie+1
+        do concurrent (i=is-1:ie+1)
            bl(i) = al(i)   - q1(i)
            br(i) = al(i+1) - q1(i)
            b0(i) = bl(i) + br(i)
            smt5(i) = bl(i)*br(i) < 0.
         enddo
       elseif ( iord==-5 ) then
-        do i=is-1,ie+1
+        do concurrent (i=is-1:ie+1)
            bl(i) = al(i)   - q1(i)
            br(i) = al(i+1) - q1(i)
            b0(i) = bl(i) + br(i)
@@ -503,25 +491,25 @@ contains
            da1(i) = br(i) - bl(i)
            a4(i) = -3.*b0(i)
         enddo
-        do i=is-1,ie+1
+        do concurrent (i=is-1:ie+1)
            if( abs(da1(i)) < -a4(i) ) then
-           if( q1(i)+0.25/a4(i)*da1(i)**2+a4(i)*r12 < 0. ) then
-             if( .not. smt5(i) ) then
-                br(i) = 0.
-                bl(i) = 0.
-                b0(i) = 0.
-             elseif( da1(i) > 0. ) then
-                br(i) = -2.*bl(i)
-                b0(i) =    -bl(i)
-             else
-                bl(i) = -2.*br(i)
-                b0(i) =    -br(i)
-             endif
-           endif
+              if( q1(i)+0.25/a4(i)*da1(i)**2+a4(i)*r12 < 0. ) then
+                if( .not. smt5(i) ) then
+                   br(i) = 0.
+                   bl(i) = 0.
+                   b0(i) = 0.
+                elseif( da1(i) > 0. ) then
+                   br(i) = -2.*bl(i)
+                   b0(i) =    -bl(i)
+                else
+                   bl(i) = -2.*br(i)
+                   b0(i) =    -br(i)
+                endif
+              endif
            endif
         enddo
       else
-        do i=is-1,ie+1
+        do concurrent (i=is-1:ie+1)
            bl(i) = al(i)   - q1(i)
            br(i) = al(i+1) - q1(i)
            b0(i) = bl(i) + br(i)
@@ -543,7 +531,7 @@ contains
       endif
 
 !DEC$ VECTOR ALWAYS
-      do i=is,ie+1
+      do concurrent (i=is:ie+1)
          if ( c(i,j) > 0. ) then
               fx1(i) = (1.-c(i,j))*(br(i-1) - c(i,j)*b0(i-1))
               flux(i,j) = q1(i-1)
@@ -564,26 +552,26 @@ contains
 ! ord = 10: PPM with Lin's modification of Huynh 2nd constraint
 ! ord = 13: positive definite constraint
 
-    do i=is-2,ie+2
+    do concurrent (i=is-2:ie+2)
           xt = 0.25*(q1(i+1) - q1(i-1))
        dm(i) = sign(min(abs(xt), max(q1(i-1), q1(i), q1(i+1)) - q1(i),  &
                          q1(i) - min(q1(i-1), q1(i), q1(i+1))), xt)
     enddo
-    do i=is1,ie1+1
+    do concurrent (i=is1:ie1+1)
        al(i) = 0.5*(q1(i-1)+q1(i)) + r3*(dm(i-1)-dm(i))
     enddo
 
     if ( iord==8 ) then
-       do i=is1, ie1
+       do concurrent (i=is1:ie1)
           xt = 2.*dm(i)
           bl(i) = -sign(min(abs(xt), abs(al(i  )-q1(i))), xt)
           br(i) =  sign(min(abs(xt), abs(al(i+1)-q1(i))), xt)
        enddo
     elseif ( iord==10 ) then
-       do i=is1-2, ie1+1
+       do concurrent (i=is1-2:ie1+1)
           dq(i) = 2.*(q1(i+1) - q1(i))
        enddo
-       do i=is1, ie1
+       do concurrent (i=is1:ie1)
           bl(i) = al(i  ) - q1(i)
           br(i) = al(i+1) - q1(i)
           if ( abs(dm(i-1))+abs(dm(i))+abs(dm(i+1)) < near_zero ) then
@@ -600,21 +588,21 @@ contains
        enddo
     elseif ( iord==11 ) then
 ! This is emulation of 2nd van Leer scheme using PPM codes
-       do i=is1, ie1
+       do concurrent (i=is1:ie1)
           xt = ppm_fac*dm(i)
           bl(i) = -sign(min(abs(xt), abs(al(i  )-q1(i))), xt)
           br(i) =  sign(min(abs(xt), abs(al(i+1)-q1(i))), xt)
        enddo
     elseif ( iord==7 .or. iord==12 ) then  ! positive definite (Lin & Rood 1996)
-       do i=is1, ie1
-          bl(i) = al(i)   - q1(i)
-          br(i) = al(i+1) - q1(i)
-          a4(i) = -3.*(bl(i) + br(i))
+       do concurrent (i=is1:ie1)
+            bl(i) = al(i)   - q1(i)
+            br(i) = al(i+1) - q1(i)
+            a4(i) = -3.*(bl(i) + br(i))
            da1(i) = br(i) - bl(i)
           ext5(i) = br(i)*bl(i) > 0.
           ext6(i) = abs(da1(i)) < -a4(i)
        enddo
-       do i=is1, ie1
+       do concurrent (i=is1:ie1)
           if( ext6(i) ) then
             if( q1(i)+0.25/a4(i)*da1(i)**2+a4(i)*r12 < 0. ) then
                 if( ext5(i) ) then
@@ -629,7 +617,7 @@ contains
           endif
        enddo
     else
-       do i=is1, ie1
+       do concurrent (i=is1: ie1)
           bl(i) = al(i  ) - q1(i)
           br(i) = al(i+1) - q1(i)
        enddo
@@ -680,11 +668,11 @@ contains
   endif
 
   if ( iord==7 ) then
-      do i=is-1,ie+1
+      do concurrent (i=is-1:ie+1)
            b0(i) = bl(i) + br(i)
          smt5(i) = bl(i) * br(i) < 0.
       enddo
-      do i=is,ie+1
+      do concurrent (i=is:ie+1)
          if ( c(i,j) > 0. ) then
               fx1(i) = (1.-c(i,j))*(br(i-1) - c(i,j)*b0(i-1))
               flux(i,j) = q1(i-1)
@@ -695,7 +683,7 @@ contains
          if ( smt5(i-1).or.smt5(i) ) flux(i,j) = flux(i,j) + fx1(i)
       enddo
   else
-      do i=is,ie+1
+      do concurrent (i=is:ie+1)
          if( c(i,j)>0. ) then
              flux(i,j) = q1(i-1) + (1.-c(i,j))*(br(i-1)-c(i,j)*(bl(i-1)+br(i-1)))
          else
@@ -746,15 +734,13 @@ contains
 
 if ( jord < 7 ) then
 
-   do j=js1, je3
-      do i=ifirst,ilast
-         al(i,j) = p1*(q(i,j-1)+q(i,j)) + p2*(q(i,j-2)+q(i,j+1))
-      enddo
+   do concurrent (i=ifirst:ilast,j=js1:je3)
+      al(i,j) = p1*(q(i,j-1)+q(i,j)) + p2*(q(i,j-2)+q(i,j+1))
    enddo
 
    if ( .not. nested .and. grid_type<3 ) then
       if( js==1 ) then
-        do i=ifirst,ilast
+        do concurrent (i=ifirst:ilast)
            al(i,0) = c1*q(i,-2) + c2*q(i,-1) + c3*q(i,0)
            al(i,1) = 0.5*(((2.*dya(i,0)+dya(i,-1))*q(i,0)-dya(i,0)*q(i,-1))/(dya(i,-1)+dya(i,0))   &
                    +      ((2.*dya(i,1)+dya(i,2))*q(i,1)-dya(i,1)*q(i,2))/(dya(i,1)+dya(i,2)))
@@ -762,81 +748,71 @@ if ( jord < 7 ) then
         enddo
       endif
       if( (je+1)==npy ) then
-        do i=ifirst,ilast
-         al(i,npy-1) = c1*q(i,npy-3) + c2*q(i,npy-2) + c3*q(i,npy-1)
-         al(i,npy) = 0.5*(((2.*dya(i,npy-1)+dya(i,npy-2))*q(i,npy-1)-dya(i,npy-1)*q(i,npy-2))/(dya(i,npy-2)+dya(i,npy-1))  &
+        do concurrent (i=ifirst:ilast)
+           al(i,npy-1) = c1*q(i,npy-3) + c2*q(i,npy-2) + c3*q(i,npy-1)
+           al(i,npy) = 0.5*(((2.*dya(i,npy-1)+dya(i,npy-2))*q(i,npy-1)-dya(i,npy-1)*q(i,npy-2))/(dya(i,npy-2)+dya(i,npy-1))  &
                    +      ((2.*dya(i,npy)+dya(i,npy+1))*q(i,npy)-dya(i,npy)*q(i,npy+1))/(dya(i,npy)+dya(i,npy+1)))
-         al(i,npy+1) = c3*q(i,npy) + c2*q(i,npy+1) + c1*q(i,npy+2)
+           al(i,npy+1) = c3*q(i,npy) + c2*q(i,npy+1) + c1*q(i,npy+2)
         enddo
       endif
    endif
 
    if ( jord<0 ) then
-      do j=js-1, je+2
-         do i=ifirst,ilast
-            al(i,j) = max(0., al(i,j))
-         enddo
+      do concurrent (j=js-1:je+2,i=ifirst:ilast)
+         al(i,j) = max(0., al(i,j))
       enddo
    endif
 
    if ( mord==1 ) then
-       do j=js-1,je+1
-          do i=ifirst,ilast
-             bl(i,j) = al(i,j  ) - q(i,j)
-             br(i,j) = al(i,j+1) - q(i,j)
-             b0(i,j) = bl(i,j) + br(i,j)
-             smt5(i,j) = abs(lim_fac*b0(i,j)) < abs(bl(i,j)-br(i,j))
-          enddo
+       do concurrent (j=js-1:je+1,i=ifirst:ilast)
+          bl(i,j) = al(i,j  ) - q(i,j)
+          br(i,j) = al(i,j+1) - q(i,j)
+          b0(i,j) = bl(i,j) + br(i,j)
+          smt5(i,j) = abs(lim_fac*b0(i,j)) < abs(bl(i,j)-br(i,j))
        enddo
-       do j=js,je+1
 !DEC$ VECTOR ALWAYS
-          do i=ifirst,ilast
-             if ( c(i,j) > 0. ) then
-                  fx1(i) = (1.-c(i,j))*(br(i,j-1) - c(i,j)*b0(i,j-1))
-                  flux(i,j) = q(i,j-1)
-             else
-                  fx1(i) = (1.+c(i,j))*(bl(i,j) + c(i,j)*b0(i,j))
-                  flux(i,j) = q(i,j)
-             endif
-             if (smt5(i,j-1).or.smt5(i,j)) flux(i,j) = flux(i,j) + fx1(i)
-          enddo
+       do concurrent (j=js:je+1,i=ifirst:ilast)
+          if ( c(i,j) > 0. ) then
+               fx1(i) = (1.-c(i,j))*(br(i,j-1) - c(i,j)*b0(i,j-1))
+               flux(i,j) = q(i,j-1)
+          else
+               fx1(i) = (1.+c(i,j))*(bl(i,j) + c(i,j)*b0(i,j))
+               flux(i,j) = q(i,j)
+          endif
+          if (smt5(i,j-1).or.smt5(i,j)) flux(i,j) = flux(i,j) + fx1(i)
        enddo
 
    elseif ( mord==2 ) then   ! Perfectly linear scheme
 ! Diffusivity: ord2 < ord5 < ord3 < ord4 < ord6  < ord7
 
-      do j=js,je+1
 !DEC$ VECTOR ALWAYS
-         do i=ifirst,ilast
-            xt = c(i,j)
-            if ( xt > 0. ) then
-                 qtmp = q(i,j-1)
-                 flux(i,j) = qtmp + (1.-xt)*(al(i,j)-qtmp-xt*(al(i,j-1)+al(i,j)-(qtmp+qtmp)))
-            else
-                 qtmp = q(i,j)
-                 flux(i,j) = qtmp + (1.+xt)*(al(i,j)-qtmp+xt*(al(i,j)+al(i,j+1)-(qtmp+qtmp)))
-            endif
-         enddo
+      do concurrent (j=js:je+1,i=ifirst:ilast)
+         xt = c(i,j)
+         if ( xt > 0. ) then
+              qtmp = q(i,j-1)
+              flux(i,j) = qtmp + (1.-xt)*(al(i,j)-qtmp-xt*(al(i,j-1)+al(i,j)-(qtmp+qtmp)))
+         else
+              qtmp = q(i,j)
+              flux(i,j) = qtmp + (1.+xt)*(al(i,j)-qtmp+xt*(al(i,j)+al(i,j+1)-(qtmp+qtmp)))
+         endif
       enddo
 
    elseif ( mord==3 ) then
 
-        do j=js-1,je+1
-           do i=ifirst,ilast
-              bl(i,j) = al(i,j  ) - q(i,j)
-              br(i,j) = al(i,j+1) - q(i,j)
-              b0(i,j) = bl(i,j) + br(i,j)
-                   x0 = abs(b0(i,j))
-                   xt = abs(bl(i,j)-br(i,j))
-              smt5(i,j) =    x0 < xt
-              smt6(i,j) = 3.*x0 < xt
-           enddo
+        do concurrent (j=js-1:je+1,i=ifirst:ilast)
+             bl(i,j) = al(i,j  ) - q(i,j)
+             br(i,j) = al(i,j+1) - q(i,j)
+             b0(i,j) = bl(i,j) + br(i,j)
+                  x0 = abs(b0(i,j))
+                  xt = abs(bl(i,j)-br(i,j))
+           smt5(i,j) =    x0 < xt
+           smt6(i,j) = 3.*x0 < xt
         enddo
         do j=js,je+1
-           do i=ifirst,ilast
+           do concurrent (i=ifirst:ilast)
               xt1(i) = c(i,j)
            enddo
-           do i=ifirst,ilast
+           do concurrent (i=ifirst:ilast)
               if ( xt1(i) > 0. ) then
                    if( smt5(i,j-1) .or. smt6(i,j) ) then
                        flux(i,j) = q(i,j-1) + (1.-xt1(i))*(br(i,j-1) - xt1(i)*b0(i,j-1))
@@ -855,26 +831,24 @@ if ( jord < 7 ) then
 
    elseif ( mord==4 ) then
 
-        do j=js-1,je+1
-           do i=ifirst,ilast
-              bl(i,j) = al(i,j  ) - q(i,j)
-              br(i,j) = al(i,j+1) - q(i,j)
-              b0(i,j) = bl(i,j) + br(i,j)
-                   x0 = abs(b0(i,j))
-                   xt = abs(bl(i,j)-br(i,j))
-              smt5(i,j) =    x0 < xt
-              smt6(i,j) = 3.*x0 < xt
-           enddo
+        do concurrent (j=js-1:je+1,i=ifirst:ilast)
+             bl(i,j) = al(i,j  ) - q(i,j)
+             br(i,j) = al(i,j+1) - q(i,j)
+             b0(i,j) = bl(i,j) + br(i,j)
+                  x0 = abs(b0(i,j))
+                  xt = abs(bl(i,j)-br(i,j))
+           smt5(i,j) =    x0 < xt
+           smt6(i,j) = 3.*x0 < xt
         enddo
         do j=js,je+1
-           do i=ifirst,ilast
+           do concurrent (i=ifirst:ilast)
               xt1(i) = c(i,j)
               hi5(i) = smt5(i,j-1) .and. smt5(i,j)
               hi6(i) = smt6(i,j-1) .or.  smt6(i,j)
               hi5(i) = hi5(i) .or. hi6(i)
            enddo
 !DEC$ VECTOR ALWAYS
-           do i=ifirst,ilast
+           do concurrent (i=ifirst:ilast)
                 if ( xt1(i) > 0. ) then
                      fx1(i) = (1.-xt1(i))*(br(i,j-1) - xt1(i)*b0(i,j-1))
                      flux(i,j) = q(i,j-1)
@@ -888,62 +862,58 @@ if ( jord < 7 ) then
 
    else  ! mord=5,6
        if ( jord==5 ) then
-          do j=js-1,je+1
-             do i=ifirst,ilast
-                bl(i,j) = al(i,j  ) - q(i,j)
-                br(i,j) = al(i,j+1) - q(i,j)
-                b0(i,j) = bl(i,j) + br(i,j)
-                smt5(i,j) = bl(i,j)*br(i,j) < 0.
-             enddo
+          do concurrent (j=js-1:je+1,i=ifirst:ilast)
+              bl(i,j) = al(i,j  ) - q(i,j)
+              br(i,j) = al(i,j+1) - q(i,j)
+              b0(i,j) = bl(i,j) + br(i,j)
+            smt5(i,j) = bl(i,j)*br(i,j) < 0
           enddo
        elseif ( jord==-5 ) then
           do j=js-1,je+1
-             do i=ifirst,ilast
-                bl(i,j) = al(i,j  ) - q(i,j)
-                br(i,j) = al(i,j+1) - q(i,j)
-                b0(i,j) = bl(i,j) + br(i,j)
-                xt1(i) = br(i,j) - bl(i,j)
-                 a4(i) = -3.*b0(i,j)
+             do concurrent (i=ifirst:ilast)
+                  bl(i,j) = al(i,j  ) - q(i,j)
+                  br(i,j) = al(i,j+1) - q(i,j)
+                  b0(i,j) = bl(i,j) + br(i,j)
+                   xt1(i) = br(i,j) - bl(i,j)
+                    a4(i) = -3.*b0(i,j)
                 smt5(i,j) = bl(i,j)*br(i,j) < 0.
              enddo
-             do i=ifirst,ilast
+             do concurrent (i=ifirst:ilast)
                 if( abs(xt1(i)) < -a4(i) ) then
-                  if( q(i,j)+0.25/a4(i)*xt1(i)**2+a4(i)*r12 < 0. ) then
-                    if( .not. smt5(i,j) ) then
-                        br(i,j) = 0.
-                        bl(i,j) = 0.
-                        b0(i,j) = 0.
-                    elseif( xt1(i) > 0. ) then
-                        br(i,j) = -2.*bl(i,j)
-                        b0(i,j) =    -bl(i,j)
-                    else
-                        bl(i,j) = -2.*br(i,j)
-                        b0(i,j) =    -br(i,j)
-                    endif
-                  endif
+                   if( q(i,j)+0.25/a4(i)*xt1(i)**2+a4(i)*r12 < 0. ) then
+                      if( .not. smt5(i,j) ) then
+                          br(i,j) = 0.
+                          bl(i,j) = 0.
+                          b0(i,j) = 0.
+                      elseif( xt1(i) > 0. ) then
+                          br(i,j) = -2.*bl(i,j)
+                          b0(i,j) =    -bl(i,j)
+                      else
+                          bl(i,j) = -2.*br(i,j)
+                          b0(i,j) =    -br(i,j)
+                      endif
+                   endif
                 endif
              enddo
           enddo
        else
-          do j=js-1,je+1
-             do i=ifirst,ilast
-                bl(i,j) = al(i,j  ) - q(i,j)
-                br(i,j) = al(i,j+1) - q(i,j)
-                b0(i,j) = bl(i,j) + br(i,j)
-                smt5(i,j) = 3.*abs(b0(i,j)) < abs(bl(i,j)-br(i,j))
-             enddo
+          do concurrent (j=js-1:je+1,i=ifirst:ilast)
+             bl(i,j) = al(i,j  ) - q(i,j)
+             br(i,j) = al(i,j+1) - q(i,j)
+             b0(i,j) = bl(i,j) + br(i,j)
+             smt5(i,j) = 3.*abs(b0(i,j)) < abs(bl(i,j)-br(i,j))
           enddo
 !WMP
 ! fix edge issues
    if ( (.not.nested) .and. grid_type < 3) then
      if( js==1 ) then
-       do i=ifirst,ilast
+       do concurrent (i=ifirst:ilast)
           smt5(i,0) = bl(i,0)*br(i,0) < 0.
           smt5(i,1) = bl(i,1)*br(i,1) < 0.
        enddo
      endif
      if( (je+1)==npy ) then
-       do i=ifirst,ilast
+       do concurrent (i=ifirst:ilast)
           smt5(i,npy-1) = bl(i,npy-1)*br(i,npy-1) < 0.
           smt5(i,npy  ) = bl(i,npy  )*br(i,npy  ) < 0.
        enddo
@@ -952,18 +922,16 @@ if ( jord < 7 ) then
 !WMP
        endif
 
-       do j=js,je+1
 !DEC$ VECTOR ALWAYS
-          do i=ifirst,ilast
-             if ( c(i,j) > 0. ) then
-                  fx1(i) = (1.-c(i,j))*(br(i,j-1) - c(i,j)*b0(i,j-1))
-                  flux(i,j) = q(i,j-1)
-             else
-                  fx1(i) = (1.+c(i,j))*(bl(i,j) + c(i,j)*b0(i,j))
-                  flux(i,j) = q(i,j)
-             endif
-             if (smt5(i,j-1).or.smt5(i,j)) flux(i,j) = flux(i,j) + fx1(i)
-          enddo
+       do concurrent (j=js:je+1,i=ifirst:ilast)
+          if ( c(i,j) > 0. ) then
+               fx1(i) = (1.-c(i,j))*(br(i,j-1) - c(i,j)*b0(i,j-1))
+               flux(i,j) = q(i,j-1)
+          else
+               fx1(i) = (1.+c(i,j))*(bl(i,j) + c(i,j)*b0(i,j))
+               flux(i,j) = q(i,j)
+          endif
+          if (smt5(i,j-1).or.smt5(i,j)) flux(i,j) = flux(i,j) + fx1(i)
        enddo
 
    endif
@@ -974,89 +942,75 @@ else
 ! ord = 8: PPM with Lin's PPM fast monotone constraint
 ! ord > 8: PPM with Lin's modification of Huynh 2nd constraint
 
-  do j=js-2,je+2
-     do i=ifirst,ilast
-             xt = 0.25*(q(i,j+1) - q(i,j-1))
-        dm(i,j) = sign(min(abs(xt), max(q(i,j-1), q(i,j), q(i,j+1)) - q(i,j),   &
-                           q(i,j) - min(q(i,j-1), q(i,j), q(i,j+1))), xt)
-     enddo
+  do concurrent (j=js-2:je+2,i=ifirst:ilast)
+          xt = 0.25*(q(i,j+1) - q(i,j-1))
+     dm(i,j) = sign(min(abs(xt), max(q(i,j-1), q(i,j), q(i,j+1)) - q(i,j),   &
+                        q(i,j) - min(q(i,j-1), q(i,j), q(i,j+1))), xt)
   enddo
-  do j=js1,je1+1
-     do i=ifirst,ilast
-        al(i,j) = 0.5*(q(i,j-1)+q(i,j)) + r3*(dm(i,j-1) - dm(i,j))
-     enddo
+  do concurrent (j=js1:je1+1,i=ifirst:ilast)
+     al(i,j) = 0.5*(q(i,j-1)+q(i,j)) + r3*(dm(i,j-1) - dm(i,j))
   enddo
 
   if ( jord==8 ) then
-       do j=js1,je1
-          do i=ifirst,ilast
-             xt = 2.*dm(i,j)
-             bl(i,j) = -sign(min(abs(xt), abs(al(i,j)-q(i,j))),   xt)
-             br(i,j) =  sign(min(abs(xt), abs(al(i,j+1)-q(i,j))), xt)
-          enddo
-       enddo
+     do concurrent (j=js1:je1,i=ifirst:ilast)
+        xt = 2.*dm(i,j)
+        bl(i,j) = -sign(min(abs(xt), abs(al(i,j)-q(i,j))),   xt)
+        br(i,j) =  sign(min(abs(xt), abs(al(i,j+1)-q(i,j))), xt)
+     enddo
   elseif ( jord==10 ) then
-       do j=js1-2,je1+1
-          do i=ifirst,ilast
-             dq(i,j) = 2.*(q(i,j+1) - q(i,j))
-          enddo
-       enddo
-       do j=js1,je1
-          do i=ifirst,ilast
-             bl(i,j) = al(i,j  ) - q(i,j)
-             br(i,j) = al(i,j+1) - q(i,j)
-             if ( abs(dm(i,j-1))+abs(dm(i,j))+abs(dm(i,j+1)) < near_zero ) then
-                  bl(i,j) = 0.
-                  br(i,j) = 0.
-             elseif( abs(3.*(bl(i,j)+br(i,j))) > abs(bl(i,j)-br(i,j)) ) then
-                  pmp_2 = dq(i,j-1)
-                  lac_2 = pmp_2 - 0.75*dq(i,j-2)
-                  br(i,j) = min(max(0.,pmp_2,lac_2), max(br(i,j), min(0.,pmp_2,lac_2)))
-                  pmp_1 = -dq(i,j)
-                  lac_1 = pmp_1 + 0.75*dq(i,j+1)
-                  bl(i,j) = min(max(0.,pmp_1,lac_1), max(bl(i,j), min(0.,pmp_1,lac_1)))
-             endif
-          enddo
-       enddo
+     do concurrent (j=js1-2:je1+1,i=ifirst:ilast)
+        dq(i,j) = 2.*(q(i,j+1) - q(i,j))
+     enddo
+     do concurrent (j=js1:je1,i=ifirst:ilast)
+        bl(i,j) = al(i,j  ) - q(i,j)
+        br(i,j) = al(i,j+1) - q(i,j)
+        if ( abs(dm(i,j-1))+abs(dm(i,j))+abs(dm(i,j+1)) < near_zero ) then
+             bl(i,j) = 0.
+             br(i,j) = 0.
+        elseif( abs(3.*(bl(i,j)+br(i,j))) > abs(bl(i,j)-br(i,j)) ) then
+             pmp_2 = dq(i,j-1)
+             lac_2 = pmp_2 - 0.75*dq(i,j-2)
+             br(i,j) = min(max(0.,pmp_2,lac_2), max(br(i,j), min(0.,pmp_2,lac_2)))
+             pmp_1 = -dq(i,j)
+             lac_1 = pmp_1 + 0.75*dq(i,j+1)
+             bl(i,j) = min(max(0.,pmp_1,lac_1), max(bl(i,j), min(0.,pmp_1,lac_1)))
+        endif
+     enddo
   elseif ( jord==11 ) then
-       do j=js1,je1
-          do i=ifirst,ilast
-             xt = ppm_fac*dm(i,j)
-             bl(i,j) = -sign(min(abs(xt), abs(al(i,j)-q(i,j))),   xt)
-             br(i,j) =  sign(min(abs(xt), abs(al(i,j+1)-q(i,j))), xt)
-          enddo
-       enddo
+     do concurrent (j=js1:je1,i=ifirst:ilast)
+        xt = ppm_fac*dm(i,j)
+        bl(i,j) = -sign(min(abs(xt), abs(al(i,j)-q(i,j))),   xt)
+        br(i,j) =  sign(min(abs(xt), abs(al(i,j+1)-q(i,j))), xt)
+     enddo
   elseif ( jord==7 .or. jord==12 ) then
-       do j=js1,je1
-          do i=ifirst,ilast
-             bl(i,j) = al(i,j  ) - q(i,j)
-             br(i,j) = al(i,j+1) - q(i,j)
-              xt1(i) = br(i,j) - bl(i,j)
-               a4(i) = -3.*(br(i,j) + bl(i,j))
-              hi5(i) = bl(i,j)*br(i,j) > 0.
-              hi6(i) = abs(xt1(i)) < -a4(i)
-          enddo
-          do i=ifirst,ilast
-             if( hi6(i) ) then
-                 if( q(i,j)+0.25/a4(i)*xt1(i)**2+a4(i)*r12 < 0. ) then
-                    if( hi5(i) ) then
-                        br(i,j) = 0.
-                        bl(i,j) = 0.
-                    elseif( xt1(i) > 0. ) then
-                        br(i,j) = -2.*bl(i,j)
-                    else
-                        bl(i,j) = -2.*br(i,j)
-                    endif
-                 endif
-             endif
-          enddo
-       enddo
+     do j=js1,je1
+        do concurrent (i=ifirst:ilast)
+           bl(i,j) = al(i,j  ) - q(i,j)
+           br(i,j) = al(i,j+1) - q(i,j)
+            xt1(i) = br(i,j) - bl(i,j)
+             a4(i) = -3.*(br(i,j) + bl(i,j))
+            hi5(i) = bl(i,j)*br(i,j) > 0.
+            hi6(i) = abs(xt1(i)) < -a4(i)
+        enddo
+        do concurrent (i=ifirst:ilast)
+           if( hi6(i) ) then
+               if( q(i,j)+0.25/a4(i)*xt1(i)**2+a4(i)*r12 < 0. ) then
+                  if( hi5(i) ) then
+                      br(i,j) = 0.
+                      bl(i,j) = 0.
+                  elseif( xt1(i) > 0. ) then
+                      br(i,j) = -2.*bl(i,j)
+                  else
+                      bl(i,j) = -2.*br(i,j)
+                  endif
+               endif
+           endif
+        enddo
+     enddo
   else
-       do j=js1,je1
-          do i=ifirst,ilast
-             bl(i,j) = al(i,j  ) - q(i,j)
-             br(i,j) = al(i,j+1) - q(i,j)
-          enddo
+       do concurrent (j=js1:je1,i=ifirst:ilast)
+          bl(i,j) = al(i,j  ) - q(i,j)
+          br(i,j) = al(i,j+1) - q(i,j)
        enddo
   endif
   if ( jord==9 .or. jord==13 ) then
@@ -1068,7 +1022,7 @@ else
 
   if (.not. nested .and. grid_type<3) then
     if( js==1 ) then
-      do i=ifirst,ilast
+      do concurrent (i=ifirst:ilast)
          bl(i,0) = s14*dm(i,-1) + s11*(q(i,-1)-q(i,0))
 
          xt = 0.5*(((2.*dya(i,0)+dya(i,-1))*q(i,0)-dya(i,0)*q(i,-1))/(dya(i,-1)+dya(i,0))   &
@@ -1089,7 +1043,7 @@ else
       call pert_ppm(3*(ilast-ifirst+1), q(ifirst,0), bl(ifirst,0), br(ifirst,0), 1)
     endif
     if( (je+1)==npy ) then
-      do i=ifirst,ilast
+      do concurrent (i=ifirst:ilast)
          bl(i,npy-2) = al(i,npy-2) - q(i,npy-2)
 
          xt = s15*q(i,npy-1) + s11*q(i,npy-2) + s14*dm(i,npy-2)
@@ -1114,14 +1068,12 @@ else
 endif
 
   if ( jord==7 ) then
-      do j=js-1,je+1
-         do i=ifirst,ilast
-              b0(i,j) = bl(i,j) + br(i,j)
-            smt5(i,j) = bl(i,j) * br(i,j) < 0.
-         enddo
+      do concurrent (j=js-1:je+1,i=ifirst:ilast)
+           b0(i,j) = bl(i,j) + br(i,j)
+         smt5(i,j) = bl(i,j) * br(i,j) < 0.
       enddo
       do j=js,je+1
-         do i=ifirst,ilast
+         do concurrent (i=ifirst:ilast)
             if ( c(i,j) > 0. ) then
                  fx1(i) = (1.-c(i,j))*(br(i,j-1) - c(i,j)*b0(i,j-1))
                  flux(i,j) = q(i,j-1)
@@ -1133,14 +1085,12 @@ endif
          enddo
       enddo
   else
-      do j=js,je+1
-         do i=ifirst,ilast
-            if( c(i,j)>0. ) then
-                flux(i,j) = q(i,j-1) + (1.-c(i,j))*(br(i,j-1)-c(i,j)*(bl(i,j-1)+br(i,j-1)))
-            else
-                flux(i,j) = q(i,j  ) + (1.+c(i,j))*(bl(i,j  )+c(i,j)*(bl(i,j)+br(i,j)))
-            endif
-         enddo
+      do concurrent (j=js:je+1,i=ifirst:ilast)
+         if( c(i,j)>0. ) then
+             flux(i,j) = q(i,j-1) + (1.-c(i,j))*(br(i,j-1)-c(i,j)*(bl(i,j-1)+br(i,j-1)))
+         else
+             flux(i,j) = q(i,j  ) + (1.+c(i,j))*(bl(i,j  )+c(i,j)*(bl(i,j)+br(i,j)))
+         endif
       enddo
   endif
 
@@ -1181,16 +1131,12 @@ endif
       endif
 
 !      Assume Periodicity in X-dir and not overlapping
-      do n=1,nq
-         do k=kfirst,klast
-            do j=jfirst-ng_s,jlast+ng_n
-               do i=1, ng_w
-                  q_ghst(ifirst-i,j,k,n) = q_ghst(ilast-i+1,j,k,n)
-               enddo
-               do i=1, ng_e
-                  q_ghst(ilast+i,j,k,n) = q_ghst(ifirst+i-1,j,k,n)
-               enddo
-            enddo
+      do concurrent (n=1:nq,k=kfirst:klast,j=jfirst-ng_s:jlast+ng_n)
+         do i=1,ng_w
+            q_ghst(ifirst-i,j,k,n) = q_ghst(ilast-i+1,j,k,n)
+         enddo
+         do i=1,ng_e
+            q_ghst(ilast+i,j,k,n) = q_ghst(ifirst+i-1,j,k,n)
          enddo
       enddo
 
@@ -1214,7 +1160,7 @@ endif
 
  if ( iv==0 ) then
 ! Positive definite constraint
-    do i=1,im
+    do concurrent (i=1:im)
      if ( a0(i) <= 0. ) then
           al(i) = 0.
           ar(i) = 0.
@@ -1238,7 +1184,7 @@ endif
     enddo
  else
 ! Standard PPM constraint
-    do i=1,im
+    do concurrent (i=1:im)
        if ( al(i)*ar(i) < 0. ) then
             da1 = al(i) - ar(i)
             da2 = da1**2
@@ -1297,42 +1243,34 @@ endif
    j1 = js-1-nord;    j2 = je+1+nord
 
    if ( .not. present(mass) ) then
-     do j=j1, j2
-        do i=i1,i2
-           d2(i,j) = damp*q(i,j)
-        enddo
+     do concurrent (j=j1:j2,i=i1:i2)
+        d2(i,j) = damp*q(i,j)
      enddo
    else
-     do j=j1, j2
-        do i=i1,i2
-           d2(i,j) = q(i,j)
-        enddo
+     do concurrent (j=j1:j2,i=i1:i2)
+        d2(i,j) = q(i,j)
      enddo
    endif
 
    if( nord>0 ) call copy_corners(d2, npx, npy, 1, gridstruct%nested, bd, &
       gridstruct%sw_corner, gridstruct%se_corner, gridstruct%nw_corner, gridstruct%ne_corner)
 
-   do j=js-nord,je+nord
-      do i=is-nord,ie+nord+1
+   do concurrent (j=js-nord:je+nord,i=is-nord:ie+nord+1)
 #ifdef USE_SG
-         fx2(i,j) = 0.5*(sin_sg(i-1,j,3)+sin_sg(i,j,1))*dy(i,j)*(d2(i-1,j)-d2(i,j))*rdxc(i,j)
+      fx2(i,j) = 0.5*(sin_sg(i-1,j,3)+sin_sg(i,j,1))*dy(i,j)*(d2(i-1,j)-d2(i,j))*rdxc(i,j)
 #else
-         fx2(i,j) = gridstruct%del6_v(i,j)*(d2(i-1,j)-d2(i,j))
+      fx2(i,j) = gridstruct%del6_v(i,j)*(d2(i-1,j)-d2(i,j))
 #endif
-      enddo
    enddo
 
    if( nord>0 ) call copy_corners(d2, npx, npy, 2, gridstruct%nested, bd, &
       gridstruct%sw_corner, gridstruct%se_corner, gridstruct%nw_corner, gridstruct%ne_corner)
-   do j=js-nord,je+nord+1
-         do i=is-nord,ie+nord
+   do concurrent (j=js-nord:je+nord+1,i=is-nord:ie+nord)
 #ifdef USE_SG
-            fy2(i,j) = 0.5*(sin_sg(i,j-1,4)+sin_sg(i,j,2))*dx(i,j)*(d2(i,j-1)-d2(i,j))*rdyc(i,j)
+         fy2(i,j) = 0.5*(sin_sg(i,j-1,4)+sin_sg(i,j,2))*dx(i,j)*(d2(i,j-1)-d2(i,j))*rdyc(i,j)
 #else
-            fy2(i,j) = gridstruct%del6_u(i,j)*(d2(i,j-1)-d2(i,j))
+         fy2(i,j) = gridstruct%del6_u(i,j)*(d2(i,j-1)-d2(i,j))
 #endif
-         enddo
    enddo
 
    if ( nord>0 ) then
@@ -1342,37 +1280,30 @@ endif
 !----------
 
    do n=1, nord
-
       nt = nord-n
 
-      do j=js-nt-1,je+nt+1
-         do i=is-nt-1,ie+nt+1
+      do concurrent (j=js-nt-1:je+nt+1,i=is-nt-1:ie+nt+1)
             d2(i,j) = (fx2(i,j)-fx2(i+1,j)+fy2(i,j)-fy2(i,j+1))*gridstruct%rarea(i,j)
-         enddo
       enddo
 
       call copy_corners(d2, npx, npy, 1, gridstruct%nested, bd, &
            gridstruct%sw_corner, gridstruct%se_corner, gridstruct%nw_corner, gridstruct%ne_corner)
-      do j=js-nt,je+nt
-         do i=is-nt,ie+nt+1
+      do concurrent (j=js-nt:je+nt,i=is-nt:ie+nt+1)
 #ifdef USE_SG
-            fx2(i,j) = 0.5*(sin_sg(i-1,j,3)+sin_sg(i,j,1))*dy(i,j)*(d2(i,j)-d2(i-1,j))*rdxc(i,j)
+         fx2(i,j) = 0.5*(sin_sg(i-1,j,3)+sin_sg(i,j,1))*dy(i,j)*(d2(i,j)-d2(i-1,j))*rdxc(i,j)
 #else
-            fx2(i,j) = gridstruct%del6_v(i,j)*(d2(i,j)-d2(i-1,j))
+         fx2(i,j) = gridstruct%del6_v(i,j)*(d2(i,j)-d2(i-1,j))
 #endif
-         enddo
       enddo
 
       call copy_corners(d2, npx, npy, 2, gridstruct%nested, bd, &
            gridstruct%sw_corner, gridstruct%se_corner, gridstruct%nw_corner, gridstruct%ne_corner)
-      do j=js-nt,je+nt+1
-            do i=is-nt,ie+nt
+      do concurrent (j=js-nt:je+nt+1,i=is-nt:ie+nt)
 #ifdef USE_SG
-               fy2(i,j) = 0.5*(sin_sg(i,j-1,4)+sin_sg(i,j,2))*dx(i,j)*(d2(i,j)-d2(i,j-1))*rdyc(i,j)
+            fy2(i,j) = 0.5*(sin_sg(i,j-1,4)+sin_sg(i,j,2))*dx(i,j)*(d2(i,j)-d2(i,j-1))*rdyc(i,j)
 #else
-               fy2(i,j) = gridstruct%del6_u(i,j)*(d2(i,j)-d2(i,j-1))
+            fy2(i,j) = gridstruct%del6_u(i,j)*(d2(i,j)-d2(i,j-1))
 #endif
-            enddo
       enddo
    enddo
 
@@ -1385,26 +1316,18 @@ endif
    if ( present(mass) ) then
 ! Apply mass weighting to diffusive fluxes:
         damp2 = 0.5*damp
-        do j=js,je
-           do i=is,ie+1
-              fx(i,j) = fx(i,j) + damp2*(mass(i-1,j)+mass(i,j))*fx2(i,j)
-           enddo
+        do concurrent (j=js:je,i=is:ie+1)
+           fx(i,j) = fx(i,j) + damp2*(mass(i-1,j)+mass(i,j))*fx2(i,j)
         enddo
-        do j=js,je+1
-           do i=is,ie
-              fy(i,j) = fy(i,j) + damp2*(mass(i,j-1)+mass(i,j))*fy2(i,j)
-           enddo
+        do concurrent (j=js:je+1,i=is:ie)
+           fy(i,j) = fy(i,j) + damp2*(mass(i,j-1)+mass(i,j))*fy2(i,j)
         enddo
    else
-        do j=js,je
-           do i=is,ie+1
-              fx(i,j) = fx(i,j) + fx2(i,j)
-           enddo
+        do concurrent (j=js:je,i=is:ie+1)
+           fx(i,j) = fx(i,j) + fx2(i,j)
         enddo
-        do j=js,je+1
-           do i=is,ie
-              fy(i,j) = fy(i,j) + fy2(i,j)
-           enddo
+        do concurrent (j=js:je+1,i=is:ie)
+           fy(i,j) = fy(i,j) + fy2(i,j)
         enddo
    endif
 

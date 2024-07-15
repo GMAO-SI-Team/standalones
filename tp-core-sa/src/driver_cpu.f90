@@ -31,6 +31,9 @@ contains
     ! Get resolution and number of iterations
     call get_cmdline_args_(n, n_iterations)
 
+    ! Repeat args
+    ! print *, 'resolution: ', n, ', iterations: ', n_iterations
+
     ! Initialize
     bd = fv_grid_bounds_type(n)
     npx = n + 1; npy = n + 1
@@ -51,7 +54,7 @@ contains
             lim_fac)
     end do
     call cpu_time(finish)
-    
+
     print *, 'time taken: ', finish - start, 's'
     print *, 'sum(fx): ', sum(out_arrays%fx), ', sum(fy): ', sum(out_arrays%fy)
 

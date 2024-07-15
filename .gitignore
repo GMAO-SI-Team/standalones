@@ -7,6 +7,7 @@ CMakeUserPresets.json
 # symlink to a directory
 build*
 install*
+benchmark*
 
 # If you build with spack libraries, you can get spack log files
 spack*.log
