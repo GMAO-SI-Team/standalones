@@ -32,9 +32,9 @@ if (NOT CMAKE_BUILD_TYPE)
 endif ()
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/support)
-include (esma_check_install_prefix)
+#include (esma_check_install_prefix)
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/compiler)
-include (esma_compiler)
+#include (esma_compiler)
 
 add_subdirectory (tp-core-sa)
 add_subdirectory (cloud-microphys-sa)
