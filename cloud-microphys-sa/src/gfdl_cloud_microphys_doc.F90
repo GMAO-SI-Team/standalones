@@ -1,4 +1,9 @@
-!! this is a test version and it has no regard for code standard. it is a clone of the GPU version
+!
+! A copy of gfdl_cloud_microphys.F90 (GPU), where certain (trivial) DO
+!       & statements have been changed to DO CONCURRENT.
+! This version of the code has not been checked for correctness and
+!       does not follow a code standard for the expediency of testing.
+!
 
 !***********************************************************************
 !*                   GNU Lesser General Public License
@@ -1357,8 +1362,8 @@ contains
     end do
     !$omp end target teams distribute parallel do simd
 
-    !!$omp target teams distribute parallel do simd collapse(2)
-    !$omp target teams distribute parallel do simd
+    !!$omp target teams distribute parallel do simd
+    !$omp target teams distribute parallel do simd collapse(2)
     do concurrent (j=js:je,i=is:ie)
           ! non-vectorizable loop
           do k = kbot, ktop, - 1
@@ -1414,6 +1419,7 @@ contains
     if (use_ppm) then
 
        !$omp target teams distribute collapse(2)
+       !do concurrent (j=js:je,i=is:ie)
        do j = js, je
           do i = is, ie
 
@@ -1425,6 +1431,7 @@ contains
                 enddo
                 !$omp end parallel do simd
                 zt (i, j, kbot + 1) = zs - dt * vtr (i, j, kbot)
+                ! non-vectorizable loop
                 ! !$omp ordered
                 do k = ktop, kbot
                    if (zt (i, j, k + 1) >= zt (i, j, k)) zt (i, j, k + 1) = zt (i, j, k) - dz_min
@@ -3021,8 +3028,8 @@ contains
     endif
 
     if (do_sedi_w) then
-       !!$omp target teams distribute collapse(2)
-       !$omp target teams distribute
+       !!$omp target teams distribute
+       !$omp target teams distribute collapse(2)
        do concurrent (j=js:je,i=is:ie)
              if (.not. no_fall (i, j)) then
                 w1 (i, j, ktop) = &
@@ -3461,8 +3468,8 @@ contains
     end do
     !$omp end target teams distribute parallel do simd
 
-    !!$omp target teams distribute parallel do simd collapse(2)
-    !$omp target teams distribute parallel do simd
+    !!$omp target teams distribute parallel do simd
+    !$omp target teams distribute parallel do simd collapse(2)
     do concurrent (j=js:je,i=is:ie)
           ! non-vectorizable loop
           do k = ktop + 1, kbot
@@ -3501,8 +3508,8 @@ contains
     end do
     !$omp end target teams distribute parallel do simd
 
-    !!$omp target teams distribute parallel do simd collapse(2)
-    !$omp target teams distribute parallel do simd
+    !!$omp target teams distribute parallel do simd
+    !$omp target teams distribute parallel do simd collapse(2)
     do concurrent (j=js:je,i=is:ie)
           ! non-vectorizable loop
           do k = ktop + 1, kbot
@@ -5120,8 +5127,8 @@ contains
     ! fix water vapor; borrow from below
     ! -----------------------------------------------------------------------
 
-    !!$omp target teams distribute parallel do simd collapse(2)
-    !$omp target teams distribute parallel do simd
+    !!$omp target teams distribute parallel do simd
+    !$omp target teams distribute parallel do simd collapse(2)
     do concurrent (j=js:je,i=is:ie)
           ! non-vectorizable loop ! TODO: is it?
           do k = ktop, kbot - 1

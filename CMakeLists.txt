@@ -15,6 +15,7 @@ find_package(MPI REQUIRED COMPONENTS Fortran)
 include_directories(${MPI_Fortran_INCLUDE_PATH})
 
 set(CMAKE_Fortran_COMPILER nvfortran)
+#set(CMAKE_Fortran_COMPILER mpifort)
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
 
 if ("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
