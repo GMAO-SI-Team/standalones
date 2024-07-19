@@ -15,7 +15,8 @@
         "CMAKE_Fortran_FLAGS": "-stdpar=gpu -fast -Mconcur -Midiom -Mvect=simd -DBUILD_TYPE=\"'gpu'\"",
         "CMAKE_EXE_LINKER_FLAGS": "",
         "CMAKE_SHARED_LINKER_FLAGS": "",
-        "GPU_BUILD": "ON"
+        "GPU_BUILD": "ON",
+        "DOC_CPU": "OFF"
       }
     },
     {
@@ -26,7 +27,8 @@
         "CMAKE_Fortran_FLAGS": "-stdpar=gpu -Minfo -DBUILD_TYPE=\"'gpu'\"",
         "CMAKE_EXE_LINKER_FLAGS": "",
         "CMAKE_SHARED_LINKER_FLAGS": "",
-        "GPU_BUILD": "ON"
+        "GPU_BUILD": "ON",
+        "DOC_CPU": "OFF"
       }
     },
     {
@@ -36,7 +38,9 @@
         "CMAKE_Fortran_COMPILER": "nvfortran",
         "CMAKE_Fortran_FLAGS": "-DBUILD_TYPE=\"'cpu'\"",
         "CMAKE_EXE_LINKER_FLAGS": "",
-        "CMAKE_SHARED_LINKER_FLAGS": ""
+        "CMAKE_SHARED_LINKER_FLAGS": "",
+        "GPU_BUILD": "OFF",
+        "DOC_CPU": "OFF"
       }
     },
     {
@@ -46,7 +50,9 @@
         "CMAKE_Fortran_COMPILER": "nvfortran",
         "CMAKE_Fortran_FLAGS": "-stdpar=multicore -DBUILD_TYPE=\"'par'\"",
         "CMAKE_EXE_LINKER_FLAGS": "",
-        "CMAKE_SHARED_LINKER_FLAGS": ""
+        "CMAKE_SHARED_LINKER_FLAGS": "",
+        "GPU_BUILD": "OFF",
+        "DOC_CPU": "OFF"
       }
     }
   ]

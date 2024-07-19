@@ -6,15 +6,29 @@ set(srcs
   src/gfdl_cloud_microphys_cpu.F90
   src/gfdl_cloud_microphys.F90
   src/gfdl_cloud_microphys_doc.F90
-  src/gfdl_cloud_microphys_doc_cpu.F90
   src/gfdl_cloud_microphys_doc_stripped.F90
   src/serial_driver_cpu.F90
   src/serial_driver_gpu.F90
   src/serial_driver_doc.F90
-  src/serial_driver_doc_cpu.F90
   src/serial_driver_doc_stripped.F90
   src/main.F90
 )
+
+if (DOC_CPU)
+  list(APPEND srcs
+    src/gfdl_cloud_microphys_doc_cpu.F90
+    src/serial_driver_doc_cpu.F90
+  )
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -DDOC_CPU")
+endif ()
+
+if (GPU_STRIPPED)
+  list(APPEND srcs
+    src/gfdl_cloud_microphys_stripped.F90
+    src/serial_driver_gpu_stripped.F90
+  )
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -DGPU_STRIPPED")
+endif ()
 
 add_executable(cloud_microphys_driver.x ${srcs})
 target_link_libraries(cloud_microphys_driver.x PRIVATE MPI::MPI_Fortran)

@@ -4,9 +4,15 @@ program main
   use MicrophysicsSerialDriverCPU, only: serial_driver_cpu => serial_driver
 #ifdef GPU_BUILD
   use MicrophysicsSerialDriverGPU, only: serial_driver_gpu => serial_driver
+#ifdef GPU_STRIPPED
+  use MicrophysicsSerialDriverGPUStripped, only: serial_driver_gpu_stripped => serial_driver
+#endif // GPU_STRIPPED
   use MicrophysicsSerialDriverDOC, only: serial_driver_doc => serial_driver
+#ifdef DOC_CPU
+  use MicrophysicsSerialDriverDOCCPU, only: serial_driver_doc_cpu => serial_driver
+#endif // DOC_CPU
   use MicrophysicsSerialDriverDOCStripped, only: serial_driver_doc_stripped => serial_driver
-#endif
+#endif // GPU_BUILD
   use input_mod, only: InputScalars_T, InputArrays_T, get_data_from_file
   use output_mod, only: OutputArrays_T, write_output_difference => write_difference
 
@@ -16,10 +22,10 @@ program main
   integer :: irank, nranks, mpi_err, i, j
   type(InputScalars_T) :: sclr
   type(InputArrays_T) :: inarr
-  type(OutputArrays_T) :: outarr1, outarr2, outarr3, outarr4, outarr_cpu
+  type(OutputArrays_T) :: outarr1, outarr2, outarr3, outarr4, outarr5, outarr_cpu
   character(len=256) :: file_name
   character(len=*), parameter :: fmt = '(1x, a1, i2, a1, 1x, a, f11.7, 1x, a1)'
-  real :: cpu_time_, doc_cpu_time_, gpu_time_(NUM_GPU_RUNS), doc_time_(NUM_GPU_RUNS), doc_stripped_time_(NUM_GPU_RUNS)
+  real :: cpu_time_, doc_cpu_time_, gpu_time_(NUM_GPU_RUNS), doc_time_(NUM_GPU_RUNS), doc_stripped_time_(NUM_GPU_RUNS), gpu_stripped_time_(NUM_GPU_RUNS)
 
   call MPI_Init(mpi_err)
   call MPI_Comm_rank(MPI_COMM_WORLD, irank, mpi_err)
@@ -64,6 +70,31 @@ program main
      call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
   end do
 
+#ifdef GPU_STRIPPED
+  ! This may be a one-and-done, hence the #ifdef guards
+  ! GPU stripped run
+  print *, 'GPU Stripped run'
+  call serial_driver_gpu_stripped(irank, NUM_GPU_RUNS, sclr, inarr, outarr5, gpu_stripped_time_)
+  call outarr5%write_arrays()
+  call write_output_difference(outarr_cpu, outarr5)
+
+  ! Hold for all to finish
+  call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
+
+  print *, "Done with GPU Stripped"
+  ! Write output differences to stdout
+  do i = 0, nranks-1
+     if (i == irank) then
+        write(*, *)
+        do j = 1, NUM_GPU_RUNS
+           write(*, fmt) '[', irank, ']', 'Time taken (gpu_str):', gpu_stripped_time_(j), 's'
+        end do
+        call write_output_difference(outarr_cpu, outarr5)
+     end if
+     call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
+  end do
+#endif // GPU_STRIPPED
+
   ! DO CONCURRENT GPU Run
   call serial_driver_doc(irank, NUM_GPU_RUNS, sclr, inarr, outarr3, doc_time_)
   call outarr3%write_arrays()
@@ -99,7 +130,7 @@ program main
      if (i == irank) then
         write(*, *)
         do j = 1, NUM_GPU_RUNS
-           write(*, fmt) '[', irank, ']', 'Time taken (doc_s):', doc_stripped_time_(j), 's'
+           write(*, fmt) '[', irank, ']', 'Time taken (doc_str):', doc_stripped_time_(j), 's'
         end do
         call write_output_difference(outarr_cpu, outarr4)
      end if
@@ -112,6 +143,10 @@ program main
   call serial_driver_doc_cpu(irank, sclr, inarr, outarr1, doc_cpu_time_)
   call outarr1%write_arrays()
   call write_output_difference(outarr_cpu, outarr1)
+
+  write(*, *)
+  write(*, fmt) '[', irank, ']', 'Time taken (doc_cpu):', doc_cpu_time_, 's'
+
 #endif // DOC_CPU
 
 #endif // GPU_BUILD

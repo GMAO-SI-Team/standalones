@@ -794,6 +794,7 @@ contains
 
        ! "Procedure call in Do Concurrent is not supported yet" - nvfortran-23.9
        do n = 1, ntimes
+       !do concurrent (n = 1: ntimes)
 
           ! -----------------------------------------------------------------------
           ! dry air density
@@ -1272,6 +1273,7 @@ contains
     AREA_LS_PRC = 0.
     ! "Procedure call in Do Concurrent is not supported yet" - nvfortran-23.9
     do k = ktop, kbot
+    !do concurrent (k = ktop: kbot)
 
        TOT_PREC_LS = TOT_PREC_LS  + (          ( qr (k) + qs (k) + qg (k) ) * den (k) )
        AREA_LS_PRC = AREA_LS_PRC  + ( qa (k) * ( qr (k) + qs (k) + qg (k) ) * den (k) )
@@ -1485,7 +1487,9 @@ contains
 
 
     ! "Procedure call in Do Concurrent is not supported yet" - nvfortran-23.9
-    do k = ktop, kbot
+    !do k = ktop, kbot
+    do concurrent (k = ktop: kbot)
+
        if (tzk (k) > tice .and. qik (k) > qcmin) then
 
           ! -----------------------------------------------------------------------
@@ -1552,7 +1556,8 @@ contains
     enddo
 
     ! "Procedure call in Do Concurrent is not supported yet" - nvfortran-23.9
-    do k = ktop, kbot
+    !do k = ktop, kbot
+    do concurrent (k = ktop: kbot)
 
        ! -----------------------------------------------------------------------
        ! do nothing above p_min
@@ -1997,6 +2002,7 @@ contains
 
     ! "Procedure call in Do Concurrent is not supported yet" - nvfortran-23.9
     do k = ktop, kbot
+    !do concurrent (k = ktop: kbot)
 
        rh_adj = 1. - h_var(k) - rh_inc
        rh_rain = max (0.35, rh_adj - rh_inr)
@@ -4349,7 +4355,9 @@ contains
     ! -----------------------------------------------------------------------
 
     ! "Procedure call in Do Concurrent is not supported yet" - nvfortran-23.9
-    do i = 1, 400
+    !do i = 1, 400
+    do concurrent (i = 1: 400)
+
        tem = 233.16 + delt * real (i - 1)
        ! wice = 0.05 * (table_ice - tem)
        ! wh2o = 0.05 * (tem - 253.16)
