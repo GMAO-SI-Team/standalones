@@ -22,10 +22,20 @@ program main
   integer :: irank, nranks, mpi_err, i, j
   type(InputScalars_T) :: sclr
   type(InputArrays_T) :: inarr
-  type(OutputArrays_T) :: outarr1, outarr2, outarr3, outarr4, outarr5, outarr_cpu
+  type(OutputArrays_T) :: outarr, outarr_cpu
   character(len=256) :: file_name
   character(len=*), parameter :: fmt = '(1x, a1, i2, a1, 1x, a, f11.7, 1x, a1)'
   real :: cpu_time_, doc_cpu_time_, gpu_time_(NUM_GPU_RUNS), doc_time_(NUM_GPU_RUNS), doc_stripped_time_(NUM_GPU_RUNS), gpu_stripped_time_(NUM_GPU_RUNS)
+  logical :: outfile_exists
+  integer, parameter :: outfile_unit = 16
+  character(len=256), parameter :: outfile = 'benchmark_cloud/table.dat'
+
+  inquire(file=outfile, exist=outfile_exists)
+  if (outfile_exists) then
+     open(outfile_unit, file=outfile, status="old", position="append", action="write")
+  else
+     open(outfile_unit, file=outfile, status="new", action="write")
+  endif
 
   call MPI_Init(mpi_err)
   call MPI_Comm_rank(MPI_COMM_WORLD, irank, mpi_err)
@@ -43,106 +53,34 @@ program main
   print *, 'CPU run'
   call serial_driver_cpu(irank, sclr, inarr, outarr_cpu, cpu_time_)
   call outarr_cpu%write_arrays()
+  print *, 'Done with CPU'
+  write(*, fmt) '[', irank, ']', 'Time taken (cpu):', cpu_time_, 's'
 
 #ifdef GPU_BUILD
-  print *, "Done with CPU"
-
   ! GPU run
-  print *, 'GPU run'
-  call serial_driver_gpu(irank, NUM_GPU_RUNS, sclr, inarr, outarr2, gpu_time_)
-  call outarr2%write_arrays()
-  !call write_output_difference(outarr_cpu, outarr2)
-
-  ! Hold for all to finish
-  call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
-
-  print *, "Done with GPU"
-  ! Write output differences to stdout
-  do i = 0, nranks-1
-     if (i == irank) then
-        write(*, *)
-        write(*, fmt) '[', irank, ']', 'Time taken (cpu):', cpu_time_, 's'
-        do j = 1, NUM_GPU_RUNS
-           write(*, fmt) '[', irank, ']', 'Time taken (gpu):', gpu_time_(j), 's'
-        end do
-        call write_output_difference(outarr_cpu, outarr2)
-     end if
-     call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
-  end do
+  call serial_driver_gpu(irank, NUM_GPU_RUNS, sclr, inarr, outarr, gpu_time_)
+  call print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, gpu_time_, 'GPU')
 
 #ifdef GPU_STRIPPED
-  ! This may be a one-and-done, hence the #ifdef guards
   ! GPU stripped run
-  print *, 'GPU Stripped run'
-  call serial_driver_gpu_stripped(irank, NUM_GPU_RUNS, sclr, inarr, outarr5, gpu_stripped_time_)
-  call outarr5%write_arrays()
-  call write_output_difference(outarr_cpu, outarr5)
-
-  ! Hold for all to finish
-  call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
-
-  print *, "Done with GPU Stripped"
-  ! Write output differences to stdout
-  do i = 0, nranks-1
-     if (i == irank) then
-        write(*, *)
-        do j = 1, NUM_GPU_RUNS
-           write(*, fmt) '[', irank, ']', 'Time taken (gpu_str):', gpu_stripped_time_(j), 's'
-        end do
-        call write_output_difference(outarr_cpu, outarr5)
-     end if
-     call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
-  end do
+  call serial_driver_gpu_stripped(irank, NUM_GPU_RUNS, sclr, inarr, outarr, gpu_stripped_time_)
+  call print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, gpu_stripped_time_, 'GPU - no OpenMP')
 #endif // GPU_STRIPPED
 
   ! DO CONCURRENT GPU Run
-  call serial_driver_doc(irank, NUM_GPU_RUNS, sclr, inarr, outarr3, doc_time_)
-  call outarr3%write_arrays()
-
-  ! Hold for all to finish
-  call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
-
-  print *, "Done with DOC"
-
-  ! Write output differences to stdout
-  do i = 0, nranks-1
-     if (i == irank) then
-        write(*, *)
-        do j = 1, NUM_GPU_RUNS
-           write(*, fmt) '[', irank, ']', 'Time taken (doc):', doc_time_(j), 's'
-        end do
-        call write_output_difference(outarr_cpu, outarr3)
-     end if
-     call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
-  end do
+  call serial_driver_doc(irank, NUM_GPU_RUNS, sclr, inarr, outarr, doc_time_)
+  call print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, doc_time_, 'GPU - DO CONCURRENT, no OpenMP')
 
   ! DO CONCURRENT (Stripped) GPU Run
-  call serial_driver_doc_stripped(irank, NUM_GPU_RUNS, sclr, inarr, outarr4, doc_stripped_time_)
-  call outarr4%write_arrays()
-
-  ! Hold for all to finish
-  call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
-
-  print *, "Done with DOC Stripped"
-
-  ! Write output differences to stdout
-  do i = 0, nranks-1
-     if (i == irank) then
-        write(*, *)
-        do j = 1, NUM_GPU_RUNS
-           write(*, fmt) '[', irank, ']', 'Time taken (doc_str):', doc_stripped_time_(j), 's'
-        end do
-        call write_output_difference(outarr_cpu, outarr4)
-     end if
-     call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
-  end do
+  !call serial_driver_doc_stripped(irank, NUM_GPU_RUNS, sclr, inarr, outarr, doc_stripped_time_)
+  !call print_info(outarr, outarr_cpu, mpi_err, irank, nranks, doc_stripped_time_, 'GPU - DO CONCURRENT, no OpenMP')
 
 #ifdef DOC_CPU
   ! DOC CPU run
   print *, 'DOC CPU run'
-  call serial_driver_doc_cpu(irank, sclr, inarr, outarr1, doc_cpu_time_)
-  call outarr1%write_arrays()
-  call write_output_difference(outarr_cpu, outarr1)
+  call serial_driver_doc_cpu(irank, sclr, inarr, outarr, doc_cpu_time_)
+  call outarr%write_arrays()
+  call write_output_difference(outarr_cpu, outarr)
 
   write(*, *)
   write(*, fmt) '[', irank, ']', 'Time taken (doc_cpu):', doc_cpu_time_, 's'
@@ -152,5 +90,48 @@ program main
 #endif // GPU_BUILD
 
   call MPI_Finalize(mpi_err)
+
+  close(outfile_unit)
+
+  ! return 0
+
+contains
+
+  subroutine print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, time_, canonical_name)
+     ! Arguments
+     integer, intent(in) :: outfile_unit
+     type(OutputArrays_T), intent(in) :: outarr, outarr_cpu
+     integer, intent(in) :: irank, nranks
+     integer, intent(inout) :: mpi_err
+     real, intent(in) :: time_(NUM_GPU_RUNS)
+     character(len=*), intent(in) :: canonical_name
+
+     ! Locals
+     character(len=*), parameter :: fmt_print = '(1x, a1, i2, a, a, a2, 1x, f11.7, 1x, a1)'
+     character(len=*), parameter :: fmt_data = '(1x)'
+     integer :: i, j
+
+     ! Code
+     !call outarr%write_arrays()
+     !call write_output_difference(outarr_cpu, outarr)
+
+     call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
+
+     print *, 'Done with ', canonical_name
+     ! Write output differences to stdout
+     do i = 0, nranks-1
+        if (i == irank) then
+           write(*, *)
+           do j = 1, NUM_GPU_RUNS
+              write(*, fmt_print) '[', irank, '] Time taken (', canonical_name, '):', time_(j), 's'
+           end do
+           call write_output_difference(outarr_cpu, outarr)
+        end if
+        call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
+     end do
+
+     ! write to outfile: code version (eg. GPU, CPU, GPU no OpenMP), compiler flags/options, OMP_THREAD_COUNT(?), runtime, diffs
+     ! (RMSE?, stdev?, avg?)
+  end subroutine print_info
 
 end program main

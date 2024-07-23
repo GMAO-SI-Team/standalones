@@ -14,8 +14,8 @@ enable_language(Fortran)
 find_package(MPI REQUIRED COMPONENTS Fortran)
 include_directories(${MPI_Fortran_INCLUDE_PATH})
 
-set(CMAKE_Fortran_COMPILER nvfortran)
-#set(CMAKE_Fortran_COMPILER mpifort)
+#set(CMAKE_Fortran_COMPILER nvfortran)
+set(CMAKE_Fortran_COMPILER mpifort)
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
 
 if ("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
@@ -33,9 +33,10 @@ if (NOT CMAKE_BUILD_TYPE)
 endif ()
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/support)
-#include (esma_check_install_prefix)
+include (esma_check_install_prefix)
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/compiler)
-#include (esma_compiler)
+include (esma_compiler)
 
-add_subdirectory (tp-core-sa)
+#add_subdirectory (tp-core-sa)
 add_subdirectory (cloud-microphys-sa)
+
