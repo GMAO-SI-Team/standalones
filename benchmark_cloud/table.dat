@@ -1,5 +1,0 @@
-code version, cpu time, test time, RMSE from CPU, nranks, OMP_NUM_THREADS, compiler ident, host
-GPU: DO CONCURRENT; no OpenMP,  4.2807193,  1.2676172,0.227276669E-04,           1,          -1,nvfortran 24.5-1,gh1
-MULTICORE: DO CONCURRENT; no OpenMP,  3.1606138,  2.9254427,0.200394225E-04,           1,          -1,nvfortran 24.5-1,gh1
-GPU: DO CONCURRENT; no OpenMP,  4.2784376,  1.2670488,0.227276669E-04,           1,          -1,nvfortran 24.5-1,gh1
-GPU; with OpenMP,  3.2388833,  0.6186056,0.231931099E-04,           1,           1,nvfortran 24.5-1,gh1
