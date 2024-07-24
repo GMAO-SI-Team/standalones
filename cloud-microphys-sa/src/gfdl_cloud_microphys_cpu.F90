@@ -4472,7 +4472,7 @@ contains
 
     integer :: i, j, k
 
-    !$omp parallel do default (none) shared (is, ie, js, je, km, hgt, zl, a2, a3) private (zm)
+    !!$omp parallel do default (none) shared (is, ie, js, je, km, hgt, zl, a2, a3) private (zm)
 
     do j = js, je
        do i = is, ie
@@ -4729,5 +4729,5 @@ contains
     ICEFRCT  = ICEFRCT_M*(1.0-CNV_FRACTION) + ICEFRCT_C*(CNV_FRACTION)
 
   end function ICE_FRACTION
-    
+
 end module gfdl2_cloud_microphys_cpu_mod

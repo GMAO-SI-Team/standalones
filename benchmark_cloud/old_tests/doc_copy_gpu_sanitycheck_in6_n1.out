@@ -1,0 +1,104 @@
+libibverbs: Warning: couldn't load driver 'libvmw_pvrdma-rdmav25.so': libvmw_pvrdma-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libsiw-rdmav25.so': libsiw-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'librxe-rdmav25.so': librxe-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libqedr-rdmav25.so': libqedr-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libmlx5-rdmav25.so': libmlx5-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libmlx4-rdmav25.so': libmlx4-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libmana-rdmav25.so': libmana-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libirdma-rdmav25.so': libirdma-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libhns-rdmav25.so': libhns-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libhfi1verbs-rdmav25.so': libhfi1verbs-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libefa-rdmav25.so': libefa-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libcxgb4-rdmav25.so': libcxgb4-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libbnxt_re-rdmav25.so': libbnxt_re-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libvmw_pvrdma-rdmav25.so': libvmw_pvrdma-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libsiw-rdmav25.so': libsiw-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'librxe-rdmav25.so': librxe-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libqedr-rdmav25.so': libqedr-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libmlx5-rdmav25.so': libmlx5-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libmlx4-rdmav25.so': libmlx4-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libmana-rdmav25.so': libmana-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libirdma-rdmav25.so': libirdma-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libhns-rdmav25.so': libhns-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libhfi1verbs-rdmav25.so': libhfi1verbs-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libefa-rdmav25.so': libefa-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libcxgb4-rdmav25.so': libcxgb4-rdmav25.so: cannot open shared object file: No such file or directory
+libibverbs: Warning: couldn't load driver 'libbnxt_re-rdmav25.so': libbnxt_re-rdmav25.so: cannot open shared object file: No such file or directory
+--------------------------------------------------------------------------
+[[25175,1],0]: A high-performance Open MPI point-to-point messaging module
+was unable to find any relevant network interfaces:
+
+Module: OpenFabrics (openib)
+  Host: gh1
+
+Another transport will be used instead, although this may result in
+lower performance.
+
+NOTE: You can disable this warning by setting the MCA parameter
+btl_base_warn_component_unused to 0.
+--------------------------------------------------------------------------
+ iis/iie/jjs/jje:             1          360            1          360
+ /kks/kke/ktop/kbot:             1           72            1           72
+ dt_in:     450.0000    
+ anv/lsc_icefall:    0.8000000       0.8000000    
+ hydrostatic/phys_hydrostatic:   F  T
+ CPU run
+      revap     0.0000000000E+00     0.4743066597E-06     0.1574651152E-01
+      isubl    -0.8288924391E-07     0.3250546001E-06     0.1037180424E-02
+       rain    -0.4016531420E-05     0.3934042664E+03     0.4125828125E+06
+       snow    -0.4666002496E-04     0.8332341194E+01     0.9599604492E+03
+        ice    -0.2157633571E-04     0.1921792865E+01     0.2629869385E+03
+    graupel    -0.1622415948E-04     0.2883908987E+01     0.8600450134E+02
+    m2_rain    -0.2051495898E-06     0.2087807083E+02     0.3475172500E+06
+     m2_sol    -0.2515942242E-05     0.9079083443E+01     0.1163318828E+06
+ Done with CPU
+ GPU run
+      revap     0.0000000000E+00     0.4743066597E-06     0.1574651152E-01
+      isubl    -0.8288915154E-07     0.3250546001E-06     0.1037180540E-02
+       rain    -0.4016531420E-05     0.3934042664E+03     0.4125828438E+06
+       snow    -0.4316940976E-04     0.8332322121E+01     0.9599600830E+03
+        ice    -0.2274216604E-04     0.1921792865E+01     0.2629878540E+03
+    graupel    -0.1767999674E-04     0.2883909941E+01     0.8600430298E+02
+    m2_rain    -0.2051495898E-06     0.2087807083E+02     0.3475172500E+06
+     m2_sol    -0.2635840247E-05     0.9079082489E+01     0.1163318984E+06
+ Done with GPU
+ 
+ [ 0] Time taken (cpu):  4.1347904 s
+ [ 0] Time taken (gpu):  2.7542934 s
+ 
+ -----------|-----------------|-----------------
+    out var |     abs error   |     rel error
+ -----------|-----------------|-----------------
+      revap | 0.158825814E-09 | 0.599402756E-05
+      isubl | 0.348890014E-10 | 0.584506142E-05
+       rain | 0.200954247E-01 | 0.385087424E-05
+       snow | 0.461404299E-03 | 0.138768992E-04
+        ice | 0.618193822E-03 | 0.610308052E-04
+    graupel | 0.991593115E-04 | 0.133885223E-04
+    m2_rain | 0.778136589E-02 | 0.693726224E-05
+     m2_sol | 0.220644032E-02 | 0.510473501E-05
+ -----------|-----------------|-----------------
+      revap     0.0000000000E+00     0.4743066597E-06     0.1574651152E-01
+      isubl    -0.8288915154E-07     0.3250546001E-06     0.1037180540E-02
+       rain    -0.4016531420E-05     0.3934042664E+03     0.4125828438E+06
+       snow    -0.4316940976E-04     0.8332322121E+01     0.9599600830E+03
+        ice    -0.2274216604E-04     0.1921792865E+01     0.2629878540E+03
+    graupel    -0.1767999674E-04     0.2883909941E+01     0.8600430298E+02
+    m2_rain    -0.2051495898E-06     0.2087807083E+02     0.3475172500E+06
+     m2_sol    -0.2635840247E-05     0.9079082489E+01     0.1163318984E+06
+ Done with DOC
+ 
+ [ 0] Time taken (doc):  2.6999240 s
+ 
+ -----------|-----------------|-----------------
+    out var |     abs error   |     rel error
+ -----------|-----------------|-----------------
+      revap | 0.158825814E-09 | 0.599402756E-05
+      isubl | 0.348890014E-10 | 0.584506142E-05
+       rain | 0.200954247E-01 | 0.385087424E-05
+       snow | 0.461404299E-03 | 0.138768992E-04
+        ice | 0.618193822E-03 | 0.610308052E-04
+    graupel | 0.991593115E-04 | 0.133885223E-04
+    m2_rain | 0.778136589E-02 | 0.693726224E-05
+     m2_sol | 0.220644032E-02 | 0.510473501E-05
+ -----------|-----------------|-----------------

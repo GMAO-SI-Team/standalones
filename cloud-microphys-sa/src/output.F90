@@ -39,7 +39,7 @@ contains
     arr%snow = 0.
     arr%ice = 0.
     arr%graupel = 0.
-    
+
     allocate(arr%m2_rain(iis:iie, jjs:jje, kks:kke), source = 0.)
     ! print *, 'shape(m2_rain): ', shape(arr%m2_rain)
     allocate(arr%m2_sol, arr%revap, arr%isubl, mold = arr%m2_rain)
@@ -76,7 +76,7 @@ contains
     print *, '-----------|-----------------|-----------------'
     print *, '   out var |     abs error   |     rel error'
     print *, '-----------|-----------------|-----------------'
-    
+
     write(*, fmt_diff) 'revap', '|', norm2(arr2%revap-arr1%revap), '|', norm2(arr2%revap-arr1%revap)/norm2(arr1%revap)
     write(*, fmt_diff) 'isubl', '|', norm2(arr2%isubl-arr1%isubl), '|', norm2(arr2%isubl-arr1%isubl)/norm2(arr1%isubl)
     write(*, fmt_diff) 'rain', '|', norm2(arr2%rain-arr1%rain), '|', norm2(arr2%rain-arr1%rain)/norm2(arr1%rain)

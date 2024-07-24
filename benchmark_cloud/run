@@ -1,0 +1,1 @@
+mpirun --n 1 install/bin/cloud_microphys_driver.x &>> benchmark_cloud/doc_optimization2_in6_n1.out

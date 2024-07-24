@@ -1,24 +1,29 @@
+
+#ifndef DOC_TYPE
+#define DOC_TYPE '(UNKNOWN)'
+#endif // DOC_TYPE
+
 program main
 
   use mpi
   use MicrophysicsSerialDriverCPU, only: serial_driver_cpu => serial_driver
 #ifdef GPU_BUILD
+  use omp_lib, only: omp_get_num_threads
   use MicrophysicsSerialDriverGPU, only: serial_driver_gpu => serial_driver
+#endif // GPU_BUILD
 #ifdef GPU_STRIPPED
   use MicrophysicsSerialDriverGPUStripped, only: serial_driver_gpu_stripped => serial_driver
 #endif // GPU_STRIPPED
+#ifdef DOC_BUILD
   use MicrophysicsSerialDriverDOC, only: serial_driver_doc => serial_driver
-#ifdef DOC_CPU
-  use MicrophysicsSerialDriverDOCCPU, only: serial_driver_doc_cpu => serial_driver
-#endif // DOC_CPU
-  use MicrophysicsSerialDriverDOCStripped, only: serial_driver_doc_stripped => serial_driver
-#endif // GPU_BUILD
+#endif // DOC_BUILD
   use input_mod, only: InputScalars_T, InputArrays_T, get_data_from_file
   use output_mod, only: OutputArrays_T, write_output_difference => write_difference
+  use iso_fortran_env, only: compiler_options, compiler_version
 
   implicit none
 
-  integer, parameter :: NUM_GPU_RUNS = 1
+  integer, parameter :: NUM_GPU_RUNS = 3
   integer :: irank, nranks, mpi_err, i, j
   type(InputScalars_T) :: sclr
   type(InputArrays_T) :: inarr
@@ -30,11 +35,15 @@ program main
   integer, parameter :: outfile_unit = 16
   character(len=256), parameter :: outfile = 'benchmark_cloud/table.dat'
 
+  !print *, "Compiler options: ", compiler_options()
+  print *, "Compiler version: ", compiler_version()
+
   inquire(file=outfile, exist=outfile_exists)
   if (outfile_exists) then
      open(outfile_unit, file=outfile, status="old", position="append", action="write")
   else
      open(outfile_unit, file=outfile, status="new", action="write")
+     write(outfile_unit, '(A)') "code version, cpu time, test time, RMSE from CPU, nranks, OMP_NUM_THREADS, compiler ident, hostname"
   endif
 
   call MPI_Init(mpi_err)
@@ -55,61 +64,50 @@ program main
   call outarr_cpu%write_arrays()
   print *, 'Done with CPU'
   write(*, fmt) '[', irank, ']', 'Time taken (cpu):', cpu_time_, 's'
+  call serial_driver_cpu(irank, sclr, inarr, outarr_cpu, cpu_time_)
+  call outarr_cpu%write_arrays()
+  print *, 'Done with CPU'
+  write(*, fmt) '[', irank, ']', 'Time taken (cpu):', cpu_time_, 's'
 
 #ifdef GPU_BUILD
   ! GPU run
   call serial_driver_gpu(irank, NUM_GPU_RUNS, sclr, inarr, outarr, gpu_time_)
-  call print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, gpu_time_, 'GPU')
+  call print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, cpu_time_, gpu_time_, 'GPU; with OpenMP')
+#endif // GPU_BUILD
 
 #ifdef GPU_STRIPPED
   ! GPU stripped run
   call serial_driver_gpu_stripped(irank, NUM_GPU_RUNS, sclr, inarr, outarr, gpu_stripped_time_)
-  call print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, gpu_stripped_time_, 'GPU - no OpenMP')
+  call print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, cpu_time_, gpu_stripped_time_, 'GPU - no OpenMP')
 #endif // GPU_STRIPPED
 
+#ifdef DOC_BUILD
   ! DO CONCURRENT GPU Run
   call serial_driver_doc(irank, NUM_GPU_RUNS, sclr, inarr, outarr, doc_time_)
-  call print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, doc_time_, 'GPU - DO CONCURRENT, no OpenMP')
-
-  ! DO CONCURRENT (Stripped) GPU Run
-  !call serial_driver_doc_stripped(irank, NUM_GPU_RUNS, sclr, inarr, outarr, doc_stripped_time_)
-  !call print_info(outarr, outarr_cpu, mpi_err, irank, nranks, doc_stripped_time_, 'GPU - DO CONCURRENT, no OpenMP')
-
-#ifdef DOC_CPU
-  ! DOC CPU run
-  print *, 'DOC CPU run'
-  call serial_driver_doc_cpu(irank, sclr, inarr, outarr, doc_cpu_time_)
-  call outarr%write_arrays()
-  call write_output_difference(outarr_cpu, outarr)
-
-  write(*, *)
-  write(*, fmt) '[', irank, ']', 'Time taken (doc_cpu):', doc_cpu_time_, 's'
-
-#endif // DOC_CPU
-
-#endif // GPU_BUILD
+  call print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, cpu_time_, doc_time_, DOC_TYPE // ': DO CONCURRENT; no OpenMP')
+#endif // DOC_BUILD
 
   call MPI_Finalize(mpi_err)
 
   close(outfile_unit)
 
-  ! return 0
-
 contains
 
-  subroutine print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, time_, canonical_name)
+  subroutine print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, cpu_time_, time_, canonical_name)
      ! Arguments
      integer, intent(in) :: outfile_unit
      type(OutputArrays_T), intent(in) :: outarr, outarr_cpu
      integer, intent(in) :: irank, nranks
      integer, intent(inout) :: mpi_err
-     real, intent(in) :: time_(NUM_GPU_RUNS)
+     real, intent(in) :: cpu_time_, time_(NUM_GPU_RUNS)
      character(len=*), intent(in) :: canonical_name
 
      ! Locals
      character(len=*), parameter :: fmt_print = '(1x, a1, i2, a, a, a2, 1x, f11.7, 1x, a1)'
-     character(len=*), parameter :: fmt_data = '(1x)'
-     integer :: i, j
+     character(len=*), parameter :: fmt_data = '(a, a1, 2(f11.7, a1), e15.9, a1, i, a1, i, a1, a, a1, a)'
+     integer :: i, j, num_threads
+     character(len=256) :: host_name
+     real :: rms
 
      ! Code
      !call outarr%write_arrays()
@@ -131,7 +129,28 @@ contains
      end do
 
      ! write to outfile: code version (eg. GPU, CPU, GPU no OpenMP), compiler flags/options, OMP_THREAD_COUNT(?), runtime, diffs
-     ! (RMSE?, stdev?, avg?)
+     ! Calculate root mean squared error
+     rms = sqrt( (&
+           &   ( ( norm2(outarr_cpu%revap-outarr%revap)/norm2(outarr_cpu%revap) ) ** 2) &
+           & + ( ( norm2(outarr_cpu%isubl-outarr%isubl)/norm2(outarr_cpu%isubl) ) ** 2) &
+           & + ( ( norm2(outarr_cpu%rain-outarr%rain)/norm2(outarr_cpu%rain) ) ** 2) &
+           & + ( ( norm2(outarr_cpu%snow-outarr%snow)/norm2(outarr_cpu%snow) ) ** 2) &
+           & + ( ( norm2(outarr_cpu%ice-outarr%ice)/norm2(outarr_cpu%ice) ) ** 2) &
+           & + ( ( norm2(outarr_cpu%graupel-outarr%graupel)/norm2(outarr_cpu%graupel) ) ** 2) &
+           & + ( ( norm2(outarr_cpu%m2_rain-outarr%m2_rain)/norm2(outarr_cpu%m2_rain) ) ** 2) &
+           & + ( ( norm2(outarr_cpu%m2_sol-outarr%m2_sol)/norm2(outarr_cpu%m2_sol) ) ** 2) &
+           & ) / 8. )
+
+#ifdef GPU_BUILD
+     num_threads = omp_get_num_threads()
+#else
+     num_threads = -1
+#endif // GPU_BUILD
+
+     call hostnm(host_name)
+
+     write(outfile_unit, fmt_data) canonical_name, ',', cpu_time_, ',', time_(NUM_GPU_RUNS), ',', &
+           & rms, ',', nranks, ',', num_threads, ',', compiler_version(), ',', trim(host_name)
   end subroutine print_info
 
 end program main
