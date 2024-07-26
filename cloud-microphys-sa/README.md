@@ -29,10 +29,10 @@ Ensure that the CPU and GPU are doing the same/similar amount of work for the sa
 ### GFDL Micrphys Files
 
 In `src/`, there are multiple versions of the GFDL cloud microphysics module. They are as follows:
- - gfdl\_cloud\_microphys\_cpu.F90 - The original CPU version of the module
- - gfdl\_cloud\_microphys\_doc.F90 - A clone of the GPU implementation using DO CONCURRENT in place of DO, where trivial
- - gfdl\_cloud\_microphys\_doc\_stripped.F90 - A clone of the GPU implementation using DO CONCURRENT in place of DO, where trivial. OpenMP directives are stripped
- - gfdl\_cloud\_microphys.F90 - A GPU implementation of the module using OpenMP directives
+ - gfdl\_cloud\_microphys\_cpu\_orig.F90 - The original CPU version of the module
+ - gfdl\_cloud\_microphys\_cpu\_doc.F90 - A clone of the CPU implementation using DO CONCURRENT in place of DO. Not in use.
+ - gfdl\_cloud\_microphys\_gpu\_orig.F90 - A GPU implementation of the module using OpenMP directives
+ - gfdl\_cloud\_microphys\_gpu\_doc.F90 - A clone of the GPU implementation using DO CONCURRENT in place of DO, where trivial
 
 There are also `serial_driver_<ver>.F90` files that act as wrappers for each.
 
