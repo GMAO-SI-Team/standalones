@@ -4,7 +4,7 @@ module input_mod
 
   private
 
-  public InputScalars_T, InputArrays_T, get_data_from_file, write_difference
+  public InputScalars_T, InputArrays_T, get_data_from_file, get_data_from_file_scaled, write_difference
 
   character(len=*), parameter :: fmt_diff = '(1x, a10, 1x, a1, 1x, e15.9)'
 
@@ -50,7 +50,7 @@ contains
     print *, 'hydrostatic/phys_hydrostatic: ', self%hydrostatic, self%phys_hydrostatic
 
   end subroutine write_scalars
-  
+
   subroutine write_arrays(self)
 
     ! Arguments
@@ -93,7 +93,7 @@ contains
     sclr%jje = jje
     sclr%kks = kks
     sclr%kke = kke
-    
+
     ! -arrays-
     ! --first, allocate memory--
     allocate(arr%area(iis:iie, jjs:jje))
@@ -119,8 +119,132 @@ contains
          arr%pt_dt, arr%qa_dt, arr%udt, arr%vdt, arr%w, &
          arr%qv_dt, arr%ql_dt, arr%qr_dt, arr%qi_dt, arr%qs_dt, arr%qg_dt
     close(file_handle)
-    
+
   end subroutine get_data_from_file
+
+  subroutine get_data_from_file_scaled(file_name, sclr, scaled_arr, scale_i, scale_j)
+
+    ! Arguments
+    character(len=*), intent(in) :: file_name
+    type(InputScalars_T), intent(out) :: sclr
+    type(InputArrays_T), intent(out) :: scaled_arr
+    integer, intent(in) :: scale_i, scale_j ! scale-up factor of input
+
+    ! Locals
+    integer :: file_handle
+    integer :: i, iis, iie, j, jjs, jje, k, kks, kke
+    integer :: iis_in, iie_in, jjs_in, jje_in, kks_in, kke_in
+    type(InputArrays_T) :: arr
+
+    ! Start
+    ! -Read-input-data-
+    open(newunit = file_handle, file = file_name, form = 'unformatted', status = 'old')
+    ! -scalars-
+    read(file_handle) &
+         iis_in, iie_in, jjs_in, jje_in, &
+         kks_in, kke_in, sclr%ktop, sclr%kbot, &
+         sclr%dt_in, &
+         sclr%anv_icefall, sclr%lsc_icefall, &
+         sclr%hydrostatic, sclr%phys_hydrostatic
+
+    ! -arrays-
+    ! --first, allocate memory--
+    allocate(arr%area(iis_in:iie_in, jjs_in:jje_in))
+    allocate(arr%land, arr%cnv_fraction, arr%srf_type, arr%eis, mold=arr%area)
+    allocate(arr%rhcrit(iis_in:iie_in, jjs_in:jje_in, kks_in:kke_in))
+    allocate(&
+         arr%delp, arr%dz, arr%uin, arr%vin, arr%pt, &
+         arr%qv, arr%ql, arr%qr, arr%qg, arr%qa, arr%qn, &
+         arr%qi, arr%qs, &
+         arr%pt_dt, arr%qa_dt, arr%udt, arr%vdt, arr%w, &
+         arr%qv_dt, arr%ql_dt, arr%qr_dt, arr%qi_dt, arr%qs_dt, arr%qg_dt, &
+         mold=arr%rhcrit)
+    ! allocate(arr%rain, arr%snow, arr%ice, arr%graupel, mold=arr%area)
+    ! allocate(arr%m2_rain, arr%m2_sol, arr%revap, arr%isubl, mold=arr%rhcrit)
+    ! --now, read--
+    read(file_handle) &
+         ! intent(in)
+         arr%area, arr%land, arr%cnv_fraction, arr%srf_type, arr%eis, arr%rhcrit, &
+         arr%delp, arr%dz, arr%uin, arr%vin, arr%pt, &
+         arr%qv, arr%ql, arr%qr, arr%qg, arr%qa, arr%qn, &
+         ! intent(inout)
+         arr%qi, arr%qs, &
+         arr%pt_dt, arr%qa_dt, arr%udt, arr%vdt, arr%w, &
+         arr%qv_dt, arr%ql_dt, arr%qr_dt, arr%qi_dt, arr%qs_dt, arr%qg_dt
+    close(file_handle)
+
+    ! Allocate arrays in scaled_arr
+    sclr%iis = iis_in
+    sclr%iie = iis_in + (iie_in - iis_in + 1) * scale_i - 1
+    sclr%jjs = jjs_in
+    sclr%jje = jjs_in + (jje_in - jjs_in + 1) * scale_j - 1
+    sclr%kks = kks_in
+    sclr%kke = kke_in
+    allocate(scaled_arr%area(sclr%iis:sclr%iie, sclr%jjs:sclr%jje))
+    allocate(scaled_arr%land, scaled_arr%cnv_fraction, scaled_arr%srf_type, scaled_arr%eis, mold=scaled_arr%area)
+    allocate(scaled_arr%rhcrit(sclr%iis:sclr%iie, sclr%jjs:sclr%jje, sclr%kks:sclr%kke))
+    allocate(&
+         scaled_arr%delp, scaled_arr%dz, scaled_arr%uin, scaled_arr%vin, scaled_arr%pt, &
+         scaled_arr%qv, scaled_arr%ql, scaled_arr%qr, scaled_arr%qg, scaled_arr%qa, scaled_arr%qn, &
+         scaled_arr%qi, scaled_arr%qs, &
+         scaled_arr%pt_dt, scaled_arr%qa_dt, scaled_arr%udt, scaled_arr%vdt, scaled_arr%w, &
+         scaled_arr%qv_dt, scaled_arr%ql_dt, scaled_arr%qr_dt, scaled_arr%qi_dt, scaled_arr%qs_dt, scaled_arr%qg_dt, &
+         mold=scaled_arr%rhcrit)
+
+    ! Copy data in
+    !do j = 1, scale_j
+    !   jjs = jjs_in + (jje_in - jjs_in + 1) * j
+    !   jjs = jjs_in + (jje_in - jjs_in + 1) * (j + 1) - 1
+    !   do i = 1, scale_i
+    !      iis =
+    kks = kks_in
+    kke = kke_in
+    do iis = iis_in, iie_in - iis_in, iie_in - iis_in + 1
+       iie = iis + (iie_in - iis_in)
+       do jjs = jjs_in, jje_in - jjs_in, jje_in - jjs_in + 1
+          jje = jjs + (jje_in - jjs_in)
+
+          ! 2D
+          scaled_arr%area(iis:iie,jjs:jje) = arr%area(iis_in:iie_in,jjs_in:jje_in)
+          scaled_arr%land(iis:iie,jjs:jje) = arr%land(iis_in:iie_in,jjs_in:jje_in)
+          scaled_arr%cnv_fraction(iis:iie,jjs:jje) = arr%cnv_fraction(iis_in:iie_in,jjs_in:jje_in)
+          scaled_arr%srf_type(iis:iie,jjs:jje) = arr%srf_type(iis_in:iie_in,jjs_in:jje_in)
+          scaled_arr%eis(iis:iie,jjs:jje) = arr%eis(iis_in:iie_in,jjs_in:jje_in)
+          scaled_arr%area(iis:iie,jjs:jje) = arr%area(iis_in:iie_in,jjs_in:jje_in)
+
+          !! 3D
+          scaled_arr%rhcrit(iis:iie,jjs:jje,kks:kke) = arr%rhcrit(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%delp(iis:iie,jjs:jje,kks:kke) = arr%delp(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%dz(iis:iie,jjs:jje,kks:kke) = arr%dz(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%uin(iis:iie,jjs:jje,kks:kke) = arr%uin(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%vin(iis:iie,jjs:jje,kks:kke) = arr%vin(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%pt(iis:iie,jjs:jje,kks:kke) = arr%pt(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%qv(iis:iie,jjs:jje,kks:kke) = arr%qv(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%ql(iis:iie,jjs:jje,kks:kke) = arr%ql(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%qr(iis:iie,jjs:jje,kks:kke) = arr%qr(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%qg(iis:iie,jjs:jje,kks:kke) = arr%qg(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%qa(iis:iie,jjs:jje,kks:kke) = arr%qa(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%qn(iis:iie,jjs:jje,kks:kke) = arr%qn(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%qi(iis:iie,jjs:jje,kks:kke) = arr%qi(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%qs(iis:iie,jjs:jje,kks:kke) = arr%qs(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%pt_dt(iis:iie,jjs:jje,kks:kke) = arr%pt_dt(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%qa_dt(iis:iie,jjs:jje,kks:kke) = arr%qa_dt(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%udt(iis:iie,jjs:jje,kks:kke) = arr%udt(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%vdt(iis:iie,jjs:jje,kks:kke) = arr%vdt(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%w(iis:iie,jjs:jje,kks:kke) = arr%w(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%qv_dt(iis:iie,jjs:jje,kks:kke) = arr%qv_dt(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%ql_dt(iis:iie,jjs:jje,kks:kke) = arr%ql_dt(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%qr_dt(iis:iie,jjs:jje,kks:kke) = arr%qr_dt(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%qi_dt(iis:iie,jjs:jje,kks:kke) = arr%qi_dt(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%qs_dt(iis:iie,jjs:jje,kks:kke) = arr%qs_dt(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%qg_dt(iis:iie,jjs:jje,kks:kke) = arr%qg_dt(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+          scaled_arr%rhcrit(iis:iie,jjs:jje,kks:kke) = arr%rhcrit(iis_in:iie_in,jjs_in:jje_in,kks_in:kke_in)
+
+       end do
+    end do
+
+
+  end subroutine get_data_from_file_scaled
 
   subroutine write_difference(arr1, arr2)
 

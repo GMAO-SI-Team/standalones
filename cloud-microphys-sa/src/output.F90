@@ -4,7 +4,7 @@ module output_mod
 
   private
 
-  public OutputArrays_T, write_arrays, write_difference
+  public OutputArrays_T, write_arrays, write_difference, get_data_from_file, write_data_to_file
 
   character(len=*), parameter :: fmt_diff = '(1x, a10, 1x, a1, 1x, e15.9, 1x, a1, 1x, e15.9)'
   character(len=*), parameter :: fmt_out = '(1x, a10, 3x, e18.10, 3x, e18.10, 3x, e18.10)'
@@ -88,5 +88,60 @@ contains
     print *, '-----------|-----------------|-----------------'
 
   end subroutine write_difference
+
+  subroutine get_data_from_file(file_name, arr)
+     ! Arguments
+     character(len=*), intent(in) :: file_name
+     type(OutputArrays_T), intent(out) :: arr
+
+     ! Locals
+     integer :: file_handle, ios
+     integer :: iis, iie, jjs, jje, kks, kke
+
+     ! Start
+     open(newunit=file_handle, file=file_name, form='unformatted', & !position='rewind',
+           status='old', iostat=ios)
+
+     ! scalars
+     read(file_handle, iostat=ios) iis, iie, jjs, jje, kks, kke
+
+     ! Allocate and initialize the outarr
+     arr = OutputArrays_T(iis, iie, jjs, jje, kks, kke)
+
+     ! Read into arrays
+     read(file_handle, iostat=ios) &
+        arr%rain, arr%snow, arr%ice, arr%graupel, &
+        arr%m2_rain, arr%m2_sol, arr%revap, arr%isubl
+     close(file_handle, iostat=ios)
+  end subroutine get_data_from_file
+
+  subroutine write_data_to_file(file_name, arr)
+     ! Arguments
+     character(len=*), intent(in) :: file_name
+     type(OutputArrays_T), intent(in) :: arr
+
+     ! Locals
+     integer :: file_handle, ios
+     integer :: iis, iie, jjs, jje, kks, kke
+
+     ! Open file
+     open(newunit=file_handle, file=file_name, status='replace', form='unformatted', action='write', iostat=ios)
+
+     ! Set array boundaries
+     iis = lbound(arr%m2_rain, 1)
+     iie = ubound(arr%m2_rain, 1)
+     jjs = lbound(arr%m2_rain, 2)
+     jje = ubound(arr%m2_rain, 2)
+     kks = lbound(arr%m2_rain, 3)
+     kke = ubound(arr%m2_rain, 3)
+
+     ! Write output
+     write(file_handle, iostat=ios) iis, iie, jjs, jje, kks, kke
+     write(file_handle, iostat=ios) &
+        arr%rain, arr%snow, arr%ice, arr%graupel, &
+        arr%m2_rain, arr%m2_sol, arr%revap, arr%isubl
+     close(file_handle)
+
+  end subroutine write_data_to_file
 
 end module output_mod
