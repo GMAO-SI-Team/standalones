@@ -1,10 +1,15 @@
 module output_mod
 
+#ifdef _OPENMP
+  use omp_lib, only: omp_get_max_threads, omp_get_num_procs
+#endif
+  use iso_fortran_env, only: compiler_options, compiler_version
+
   implicit none
 
   private
 
-  public OutputArrays_T, write_arrays, write_difference, get_data_from_file, write_data_to_file
+  public OutputArrays_T, write_arrays, write_difference, get_data_from_file, write_data_to_file, print_info
 
   character(len=*), parameter :: fmt_diff = '(1x, a10, 1x, a1, 1x, e15.9, 1x, a1, 1x, e15.9)'
   character(len=*), parameter :: fmt_out = '(1x, a10, 3x, e18.10, 3x, e18.10, 3x, e18.10)'
@@ -143,5 +148,68 @@ contains
      close(file_handle)
 
   end subroutine write_data_to_file
+
+  subroutine print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, cpu_time_, time_, canonical_name, scale_i, scale_j)
+     ! Arguments
+     integer, intent(in) :: outfile_unit
+     type(OutputArrays_T), intent(in) :: outarr, outarr_cpu
+     integer, intent(in) :: irank, nranks
+     integer, intent(inout) :: mpi_err
+     real, intent(in) :: cpu_time_, time_(:)
+     character(len=*), intent(in) :: canonical_name
+     integer, intent(in) :: scale_i, scale_j
+
+     ! Locals
+     character(len=*), parameter :: fmt_print = '(1x, a1, i2, a, a, a2, 1x, f11.7, 1x, a1)'
+     character(len=*), parameter :: fmt_data = '(a, a1, 2(f11.7, a1), e15.9, a1, i, a1, i, a1, a, a1, a, a1, a, a1, i2, a1, i2)'
+     integer :: i, j, num_threads
+     character(len=256) :: host_name, acc_num_cores
+     real :: rms
+
+     ! Code
+#ifdef MPI_VERSION
+     call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
+#endif // MPI_VERSION
+
+     print *, 'Done with ', trim(canonical_name)
+     ! Write output differences to stdout
+     do i = 0, nranks
+        if (i == irank) then
+           write(*, *)
+           do j = 1, size(time_)
+              write(*, fmt_print) '[', irank, '] Time taken (', trim(canonical_name), '):', time_(j), 's'
+           end do
+           call write_difference(outarr_cpu, outarr)
+        end if
+#ifdef MPI_VERSION
+        call MPI_Barrier(MPI_COMM_WORLD, mpi_err)
+#endif // MPI_VERSION
+     end do
+
+     ! Calculate root mean squared error
+     rms = sqrt( (&
+           &   ( ( norm2(outarr_cpu%revap-outarr%revap)/norm2(outarr_cpu%revap) ) ** 2) &
+           & + ( ( norm2(outarr_cpu%isubl-outarr%isubl)/norm2(outarr_cpu%isubl) ) ** 2) &
+           & + ( ( norm2(outarr_cpu%rain-outarr%rain)/norm2(outarr_cpu%rain) ) ** 2) &
+           & + ( ( norm2(outarr_cpu%snow-outarr%snow)/norm2(outarr_cpu%snow) ) ** 2) &
+           & + ( ( norm2(outarr_cpu%ice-outarr%ice)/norm2(outarr_cpu%ice) ) ** 2) &
+           & + ( ( norm2(outarr_cpu%graupel-outarr%graupel)/norm2(outarr_cpu%graupel) ) ** 2) &
+           & + ( ( norm2(outarr_cpu%m2_rain-outarr%m2_rain)/norm2(outarr_cpu%m2_rain) ) ** 2) &
+           & + ( ( norm2(outarr_cpu%m2_sol-outarr%m2_sol)/norm2(outarr_cpu%m2_sol) ) ** 2) &
+           & ) / 8. )
+
+#ifdef _OPENMP
+     num_threads = omp_get_max_threads()
+#else
+     num_threads = -1
+#endif
+
+     call hostnm(host_name)
+     call get_environment_variable("ACC_NUM_CORES", acc_num_cores)
+
+     write(outfile_unit, fmt_data) trim(canonical_name), ',', cpu_time_, ',', time_(size(time_)), ',', &
+           rms, ',', nranks, ',', num_threads, ',', compiler_version(), ',', trim(host_name), ',', &
+           trim(acc_num_cores), ',', scale_i, ',', scale_j
+  end subroutine print_info
 
 end module output_mod

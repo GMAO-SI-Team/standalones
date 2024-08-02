@@ -1,33 +1,10 @@
 
-#ifndef DOC_TYPE
-#define DOC_TYPE '(UNKNOWN)'
-#endif // DOC_TYPE
-
-#ifndef OMP_TYPE
-#define OMP_TYPE '(UNKNOWN)'
-#endif
-
 program main
 
-#ifdef MPI_VERSION
   use mpi
-#endif // MPI_VERSION
   use MicrophysicsSerialDriverCPU, only: serial_driver_cpu => serial_driver
-#ifdef _OPENMP
   use omp_lib, only: omp_get_max_threads, omp_get_num_procs
-#endif
-#ifdef OMP_BUILD
   use MicrophysicsSerialDriverGPU, only: serial_driver_gpu => serial_driver
-#endif // OMP_BUILD
-#ifdef GPU_STRIPPED
-  use MicrophysicsSerialDriverGPUStripped, only: serial_driver_gpu_stripped => serial_driver
-#endif // GPU_STRIPPED
-#ifdef DOC_BUILD
-  use MicrophysicsSerialDriverDOC, only: serial_driver_doc => serial_driver
-#endif // DOC_BUILD
-#ifdef OMP_NO_TARGET
-  use MicrophysicsSerialDriverOMPCPU, only: serial_driver_omp_cpu => serial_driver
-#endif // OMP_NO_TARGET
   use input_mod, only: InputScalars_T, InputArrays_T, get_data_from_file, get_data_from_file_scaled
   use output_mod, only: OutputArrays_T, write_output_difference => write_difference, &
         get_cpu_data => get_data_from_file, write_data_to_file, print_info
@@ -42,14 +19,10 @@ program main
   type(OutputArrays_T) :: outarr, outarr_cpu
   character(len=256) :: input_file_name, savestate_file_name, canonical_name
   character(len=*), parameter :: fmt = '(1x, a1, i2, a1, 1x, a, f11.7, 1x, a1)'
-  real :: cpu_time_, doc_cpu_time_, gpu_time_(NUM_GPU_RUNS), doc_time_(NUM_GPU_RUNS), doc_stripped_time_(NUM_GPU_RUNS), gpu_stripped_time_(NUM_GPU_RUNS)
+  real :: cpu_time_, test_time_scalar_, test_time_arr_(NUM_GPU_RUNS)
   logical :: outfile_exists, savestate_exists
   integer, parameter :: outfile_unit = 16
   character(len=256), parameter :: outfile = 'benchmark_cloud/table.dat'
-
-  print *, 'Outdated main file, do not use!'
-  stop 1
-  DO_NOT_COMPILE ! message to compiler to please not compile
 
   !print *, "Compiler options: ", compiler_options()
   print *, 'Compiler version: ', compiler_version()
@@ -60,15 +33,13 @@ program main
   else
      open(outfile_unit, file=outfile, status="new", action="write")
      write(outfile_unit, '(A)') "code version, cpu time, test time, RMSE from CPU, nranks, &
-           OMP_NUM_THREADS, compiler ident,  hostname, acc_num_threads"
+           OMP_NUM_THREADS, compiler ident,  hostname, acc_num_threads, scale_i, scale_j"
   endif
   print *, 'Saving output data to: ', trim(outfile)
 
-#ifdef MPI_VERSION
   call MPI_Init(mpi_err)
   call MPI_Comm_rank(MPI_COMM_WORLD, irank, mpi_err)
   call MPI_Comm_size(MPI_COMM_WORLD, nranks, mpi_err)
-#endif // MPI_VERSION
 
   ! Preapre file name variables
   write(input_file_name, '(a26, i2.2, a4)') 'input-data/microphys_data.', irank, '.bin'
@@ -76,7 +47,7 @@ program main
 
   ! Read input data
   !call get_data_from_file(file_name, sclr, inarr)
-  print *, 'Using input size multiplier of: ', SCALE_I, 'x', SCALE_J, ' = ', (SCALE_I * SCALE_J)
+  print *, 'Using input size multiplier of: ', SCALE_I, 'x', SCALE_J, ' = ', (SCALE_I *SCALE_J)
   call get_data_from_file_scaled(input_file_name, sclr, inarr, SCALE_I, SCALE_J)
   !call sclr%write_scalars()
   !call inarr%write_arrays()
@@ -97,41 +68,14 @@ program main
      call write_data_to_file(savestate_file_name, outarr_cpu)
   endif
 
-#ifdef OMP_BUILD
-  ! GPU run
-  write(canonical_name, '(a)') OMP_TYPE // '; with OpenMP'
+  ! OMP GPU run
+  write(canonical_name, '(a)') 'GPU: with OpenMP'
   print *, 'Running ', trim(canonical_name)
-  call serial_driver_gpu(irank, NUM_GPU_RUNS, sclr, inarr, outarr, gpu_time_)
-  call print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, cpu_time_, gpu_time_, canonical_name)
-#endif // OMP_BUILD
+  call serial_driver_gpu(irank, NUM_GPU_RUNS, sclr, inarr, outarr, test_time_arr_)
+  call print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, &
+        cpu_time_, test_time_arr_, canonical_name, SCALE_I, SCALE_J)
 
-#ifdef GPU_STRIPPED
-  ! GPU stripped run
-  write(canonical_name, '(a)') 'GPU - no OpenMP'
-  print *, 'Running ', (canonical_name)
-  call serial_driver_gpu_stripped(irank, NUM_GPU_RUNS, sclr, inarr, outarr, gpu_stripped_time_)
-  call print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, cpu_time_, gpu_stripped_time_, canonical_name)
-#endif // GPU_STRIPPED
-
-#ifdef DOC_BUILD
-  ! DO CONCURRENT (?) Run
-  write(canonical_name, '(a)') DOC_TYPE // ': DO CONCURRENT; no OpenMP'
-  print *, 'Running ', (canonical_name)
-  call serial_driver_doc(irank, NUM_GPU_RUNS, sclr, inarr, outarr, doc_time_)
-  call print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, cpu_time_, doc_time_, canonical_name)
-#endif // DOC_BUILD
-
-#ifdef OMP_NO_TARGET
-  ! OMP without "target" commands/directives (intended for CPU)
-  write(canonical_name, '(a)') 'CPU : OpenMP (no target)'
-  print *, 'Running ', (canonical_name)
-  call serial_driver_omp_cpu(irank, NUM_GPU_RUNS, sclr, inarr, outarr, doc_time_)
-  call print_info(outfile_unit, outarr, outarr_cpu, mpi_err, irank, nranks, cpu_time_, doc_time_, canonical_name)
-#endif // OMP_NO_TARGET
-
-#ifdef MPI_VERSION
   call MPI_Finalize(mpi_err)
-#endif // MPI_VERSION
 
   close(outfile_unit)
 

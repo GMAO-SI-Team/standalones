@@ -5,40 +5,43 @@ set(common_srcs
   src/output.F90
   src/gfdl_cloud_microphys_cpu_orig.F90
   src/serial_driver_cpu.F90
-  src/main.F90
 )
-
-# "cpu"    - serial
-# "" (gpu) - OpenMP GPU
-# "doc"    - DO CONCURRENT (without OpenMP)
 
 set(cpu_srcs
 )
 
 set(omp_srcs
-  src/gfdl_cloud_microphys_gpu_orig.F90
-  src/serial_driver_gpu.F90
+  src/gfdl_cloud_microphys_omp_orig.F90
+  src/serial_driver_omp.F90
 )
 
 set(doc_srcs
-  src/gfdl_cloud_microphys_gpu_doc.F90
+  src/gfdl_cloud_microphys_doc.F90
   src/serial_driver_doc.F90
 )
 
 set(omp_no_target_srcs
-  src/gfdl_cloud_microphys_omp_cpu.F90
-  src/serial_driver_omp_cpu.F90
+  src/gfdl_cloud_microphys_omp_no_target.F90
+  src/serial_driver_omp_no_target.F90
 )
 
 ## CPU driver
 # <no flags>
-add_executable(cloud_microphys_driver_cpu_serial.x ${common_srcs} ${cpu_srcs})
+add_executable(cloud_microphys_driver_cpu_serial.x src/main_cpu_serial.F90 ${common_srcs} ${cpu_srcs})
 target_link_libraries(cloud_microphys_driver_cpu_serial.x PRIVATE MPI::MPI_Fortran)
 install(TARGETS cloud_microphys_driver_cpu_serial.x DESTINATION bin)
 
+## CPU driver with -Mconcur=allcores
+# -Mconcur=allcores
+add_executable(cloud_microphys_driver_cpu_mconcur.x src/main_cpu_mconcur.F90 ${common_srcs} ${cpu_srcs})
+target_link_libraries(cloud_microphys_driver_cpu_mconcur.x PRIVATE MPI::MPI_Fortran)
+install(TARGETS cloud_microphys_driver_cpu_mconcur.x DESTINATION bin)
+target_compile_options(cloud_microphys_driver_cpu_mconcur.x PRIVATE "-Mconcur=allcores")
+target_link_options(cloud_microphys_driver_cpu_mconcur.x PRIVATE "-Mconcur=allcores")
+
 ## GPU driver with OpenMP
 # -mp=gpu
-add_executable(cloud_microphys_driver_omp_on_gpu.x ${common_srcs} ${omp_srcs})
+add_executable(cloud_microphys_driver_omp_on_gpu.x src/main_omp_gpu.F90 ${common_srcs} ${omp_srcs})
 target_link_libraries(cloud_microphys_driver_omp_on_gpu.x PRIVATE MPI::MPI_Fortran)
 install(TARGETS cloud_microphys_driver_omp_on_gpu.x DESTINATION bin)
 target_compile_definitions(cloud_microphys_driver_omp_on_gpu.x PRIVATE OMP_BUILD)
@@ -48,7 +51,7 @@ target_link_options(cloud_microphys_driver_omp_on_gpu.x PRIVATE "-mp=gpu")
 
 ## CPU driver with OpenMP NO TARGET
 # -mp=multicore
-add_executable(cloud_microphys_driver_omp_on_cpu_no_target.x ${common_srcs} ${omp_no_target_srcs})
+add_executable(cloud_microphys_driver_omp_on_cpu_no_target.x src/main_omp_cpu_no_target.F90 ${common_srcs} ${omp_no_target_srcs})
 target_link_libraries(cloud_microphys_driver_omp_on_cpu_no_target.x PRIVATE MPI::MPI_Fortran)
 install(TARGETS cloud_microphys_driver_omp_on_cpu_no_target.x DESTINATION bin)
 target_compile_definitions(cloud_microphys_driver_omp_on_cpu_no_target.x PRIVATE OMP_NO_TARGET)
@@ -57,7 +60,7 @@ target_link_options(cloud_microphys_driver_omp_on_cpu_no_target.x PRIVATE "-mp=m
 
 ## CPU driver with OpenMP
 # -mp=multicore
-add_executable(cloud_microphys_driver_omp_on_cpu.x ${common_srcs} ${omp_srcs})
+add_executable(cloud_microphys_driver_omp_on_cpu.x src/main_omp_cpu.F90 ${common_srcs} ${omp_srcs})
 target_link_libraries(cloud_microphys_driver_omp_on_cpu.x PRIVATE MPI::MPI_Fortran)
 install(TARGETS cloud_microphys_driver_omp_on_cpu.x DESTINATION bin)
 target_compile_definitions(cloud_microphys_driver_omp_on_cpu.x PRIVATE OMP_BUILD)
@@ -67,7 +70,7 @@ target_link_options(cloud_microphys_driver_omp_on_cpu.x PRIVATE "-mp=multicore")
 
 ## DOC multicore driver
 # -stdpar=multicore (for do concurrent)
-add_executable(cloud_microphys_driver_doc_multicore.x ${common_srcs} ${doc_srcs})
+add_executable(cloud_microphys_driver_doc_multicore.x src/main_doc_cpu.F90 ${common_srcs} ${doc_srcs})
 target_link_libraries(cloud_microphys_driver_doc_multicore.x PRIVATE MPI::MPI_Fortran)
 install(TARGETS cloud_microphys_driver_doc_multicore.x DESTINATION bin)
 target_compile_definitions(cloud_microphys_driver_doc_multicore.x PRIVATE DOC_BUILD)
@@ -79,7 +82,7 @@ target_link_options(cloud_microphys_driver_doc_multicore.x PRIVATE "-stdpar=mult
 
 ## DOC gpu driver
 # -stdpar=gpu -gpu=managed
-add_executable(cloud_microphys_driver_doc_gpu.x ${common_srcs} ${doc_srcs})
+add_executable(cloud_microphys_driver_doc_gpu.x src/main_doc_gpu.F90 ${common_srcs} ${doc_srcs})
 target_link_libraries(cloud_microphys_driver_doc_gpu.x PRIVATE MPI::MPI_Fortran)
 install(TARGETS cloud_microphys_driver_doc_gpu.x DESTINATION bin)
 target_compile_definitions(cloud_microphys_driver_doc_gpu.x PRIVATE DOC_BUILD)
@@ -90,6 +93,17 @@ target_link_options(cloud_microphys_driver_doc_gpu.x PRIVATE "-stdpar=gpu")
 target_link_options(cloud_microphys_driver_doc_gpu.x PRIVATE "-gpu=managed")
 
 
+## DOC gpu driver unified
+# -stdpar=gpu -gpu=unified
+add_executable(cloud_microphys_driver_doc_gpu_unified.x src/main_doc_gpu.F90 ${common_srcs} ${doc_srcs})
+target_link_libraries(cloud_microphys_driver_doc_gpu_unified.x PRIVATE MPI::MPI_Fortran)
+install(TARGETS cloud_microphys_driver_doc_gpu_unified.x DESTINATION bin)
+target_compile_definitions(cloud_microphys_driver_doc_gpu_unified.x PRIVATE DOC_BUILD)
+target_compile_definitions(cloud_microphys_driver_doc_gpu_unified.x PRIVATE DOC_TYPE="GPU")
+target_compile_options(cloud_microphys_driver_doc_gpu_unified.x PRIVATE "-stdpar=gpu")
+target_compile_options(cloud_microphys_driver_doc_gpu_unified.x PRIVATE "-gpu=unified")
+target_link_options(cloud_microphys_driver_doc_gpu_unified.x PRIVATE "-stdpar=gpu")
+target_link_options(cloud_microphys_driver_doc_gpu_unified.x PRIVATE "-gpu=unified")
 
 #### OLD VERSION
 #add_executable(cloud_microphys_driver.x ${srcs})
