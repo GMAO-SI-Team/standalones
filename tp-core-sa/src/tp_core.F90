@@ -179,7 +179,9 @@ contains
 
   call xppm(fx2, q, crx, ord_in, is,ie,isd,ied, jsd,jed,jsd,jed, npx,npy, gridstruct%dxa, gridstruct%nested, gridstruct%grid_type, lim_fac)
 
-   do j=jsd,jed
+   !do j=jsd,jed
+   !!v2
+   do concurrent (j=jsd:jed)
       do concurrent (i=is:ie+1)
          fx1(i) =  xfx(i,j) * fx2(i,j)
       enddo
@@ -386,7 +388,6 @@ contains
            b0(i) = bl(i) + br(i)
            smt5(i) = abs(lim_fac*b0(i)) < abs(bl(i)-br(i))
         enddo
-!DEC$ VECTOR ALWAYS
       do concurrent (i=is:ie+1)
          if ( c(i,j) > 0. ) then
              fx1(i) = (1.-c(i,j))*(br(i-1) - c(i,j)*b0(i-1))
@@ -400,8 +401,7 @@ contains
 
    elseif ( mord==2 ) then  ! perfectly linear scheme
 
-!DEC$ VECTOR ALWAYS
-      do concurrent (i=is:ie+1)
+      do concurrent (i=is:ie+1) local(xt)
          xt = c(i,j)
          if ( xt > 0. ) then
               qtmp = q1(i-1)
@@ -461,7 +461,6 @@ contains
            hi6(i) = smt6(i-1) .or.  smt6(i)
            hi5(i) = hi5(i) .or. hi6(i)
         enddo
-!DEC$ VECTOR ALWAYS
         do concurrent (i=is:ie+1)
           if ( xt1(i) > 0. ) then
                fx1(i) = (1.-xt1(i))*(br(i-1) - xt1(i)*b0(i-1))
@@ -530,7 +529,6 @@ contains
 !WMP
       endif
 
-!DEC$ VECTOR ALWAYS
       do concurrent (i=is:ie+1)
          if ( c(i,j) > 0. ) then
               fx1(i) = (1.-c(i,j))*(br(i-1) - c(i,j)*b0(i-1))
@@ -770,7 +768,6 @@ if ( jord < 7 ) then
           b0(i,j) = bl(i,j) + br(i,j)
           smt5(i,j) = abs(lim_fac*b0(i,j)) < abs(bl(i,j)-br(i,j))
        enddo
-!DEC$ VECTOR ALWAYS
        do concurrent (j=js:je+1,i=ifirst:ilast)
           if ( c(i,j) > 0. ) then
                fx1(i) = (1.-c(i,j))*(br(i,j-1) - c(i,j)*b0(i,j-1))
@@ -785,7 +782,6 @@ if ( jord < 7 ) then
    elseif ( mord==2 ) then   ! Perfectly linear scheme
 ! Diffusivity: ord2 < ord5 < ord3 < ord4 < ord6  < ord7
 
-!DEC$ VECTOR ALWAYS
       do concurrent (j=js:je+1,i=ifirst:ilast)
          xt = c(i,j)
          if ( xt > 0. ) then
@@ -847,7 +843,6 @@ if ( jord < 7 ) then
               hi6(i) = smt6(i,j-1) .or.  smt6(i,j)
               hi5(i) = hi5(i) .or. hi6(i)
            enddo
-!DEC$ VECTOR ALWAYS
            do concurrent (i=ifirst:ilast)
                 if ( xt1(i) > 0. ) then
                      fx1(i) = (1.-xt1(i))*(br(i,j-1) - xt1(i)*b0(i,j-1))
@@ -922,7 +917,6 @@ if ( jord < 7 ) then
 !WMP
        endif
 
-!DEC$ VECTOR ALWAYS
        do concurrent (j=js:je+1,i=ifirst:ilast)
           if ( c(i,j) > 0. ) then
                fx1(i) = (1.-c(i,j))*(br(i,j-1) - c(i,j)*b0(i,j-1))

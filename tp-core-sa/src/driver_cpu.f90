@@ -41,6 +41,20 @@ contains
     in_arrays = InputArrays_T(bd, npx, npy, gridstruct)
     out_arrays = OutputArrays_T(bd)
 
+    ! First iter to isolate potential GPU "spin-up" time
+    call cpu_time(start)
+       call fv_tp_2d( &
+            in_arrays%q, in_arrays%crx, in_arrays%cry, &
+            npx, npy, hord, &
+            out_arrays%fx, out_arrays%fy, &
+            in_arrays%xfx, in_arrays%yfx, &
+            gridstruct, bd, &
+            in_arrays%ra_x, in_arrays%ra_y, &
+            lim_fac)
+    call cpu_time(finish)
+
+    print *, 'first iter time taken: ', finish - start, 's'
+
     ! Run fv_tp_2d
     call cpu_time(start)
     do iter = 1, n_iterations

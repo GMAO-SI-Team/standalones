@@ -11,7 +11,7 @@ program main
 
   implicit none
 
-  integer, parameter :: NUM_GPU_RUNS = 1, SCALE_I = 4, SCALE_J = 4
+  integer, parameter :: NUM_GPU_RUNS = 1, SCALE_I = 1, SCALE_J = 1
   integer :: irank, nranks, mpi_err, i, j
   type(InputScalars_T) :: sclr
   type(InputArrays_T) :: inarr

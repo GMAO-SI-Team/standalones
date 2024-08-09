@@ -105,6 +105,30 @@ target_compile_options(cloud_microphys_driver_doc_gpu_unified.x PRIVATE "-gpu=un
 target_link_options(cloud_microphys_driver_doc_gpu_unified.x PRIVATE "-stdpar=gpu")
 target_link_options(cloud_microphys_driver_doc_gpu_unified.x PRIVATE "-gpu=unified")
 
+## DOC gpu driver unified
+# -stdpar=gpu -gpu=mem_unified
+add_executable(cloud_microphys_driver_doc_gpu_mem_unified.x src/main_doc_gpu.F90 ${common_srcs} ${doc_srcs})
+target_link_libraries(cloud_microphys_driver_doc_gpu_mem_unified.x PRIVATE MPI::MPI_Fortran)
+install(TARGETS cloud_microphys_driver_doc_gpu_mem_unified.x DESTINATION bin)
+target_compile_definitions(cloud_microphys_driver_doc_gpu_mem_unified.x PRIVATE DOC_BUILD)
+target_compile_definitions(cloud_microphys_driver_doc_gpu_mem_unified.x PRIVATE DOC_TYPE="GPU")
+target_compile_options(cloud_microphys_driver_doc_gpu_mem_unified.x PRIVATE "-stdpar=gpu")
+target_compile_options(cloud_microphys_driver_doc_gpu_mem_unified.x PRIVATE "-gpu=mem:unified")
+target_link_options(cloud_microphys_driver_doc_gpu_mem_unified.x PRIVATE "-stdpar=gpu")
+target_link_options(cloud_microphys_driver_doc_gpu_mem_unified.x PRIVATE "-gpu=mem:unified")
+
+## DOC gpu driver mem:separate
+# -stdpar=gpu -gpu=mem:separate
+add_executable(cloud_microphys_driver_doc_gpu_mem_separate.x src/main_doc_gpu.F90 ${common_srcs} ${doc_srcs})
+target_link_libraries(cloud_microphys_driver_doc_gpu_mem_separate.x PRIVATE MPI::MPI_Fortran)
+install(TARGETS cloud_microphys_driver_doc_gpu_mem_separate.x DESTINATION bin)
+target_compile_definitions(cloud_microphys_driver_doc_gpu_mem_separate.x PRIVATE DOC_BUILD)
+target_compile_definitions(cloud_microphys_driver_doc_gpu_mem_separate.x PRIVATE DOC_TYPE="GPU")
+target_compile_options(cloud_microphys_driver_doc_gpu_mem_separate.x PRIVATE "-stdpar=gpu")
+target_compile_options(cloud_microphys_driver_doc_gpu_mem_separate.x PRIVATE "-gpu=mem:separate")
+target_link_options(cloud_microphys_driver_doc_gpu_mem_separate.x PRIVATE "-stdpar=gpu")
+target_link_options(cloud_microphys_driver_doc_gpu_mem_separate.x PRIVATE "-gpu=mem:separate")
+
 #### OLD VERSION
 #add_executable(cloud_microphys_driver.x ${srcs})
 ##target_link_libraries(cloud_microphys_driver.x PRIVATE MPI::MPI_Fortran)
